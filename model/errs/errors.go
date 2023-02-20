@@ -20,7 +20,14 @@ func UnexpectedError(message string) *AppError {
 	}
 }
 
-func InvalidNumberError(message string) *AppError{
+func NumberNotFoundError(message string) *AppError{
+	return &AppError{
+		Message: message,
+		Code: http.StatusBadRequest,
+	}
+}
+
+func InvalidInputError(message string) *AppError{
 	return &AppError{
 		Message: message,
 		Code: http.StatusBadRequest,

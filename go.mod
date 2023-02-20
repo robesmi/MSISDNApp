@@ -4,11 +4,13 @@ go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.8.2
+	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.3.5
 )
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
