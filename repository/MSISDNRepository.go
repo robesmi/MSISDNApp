@@ -14,16 +14,19 @@ func NewMSISDNRepository(dbClient *sqlx.DB) MSISDNRepositoryDb{
 }
 
 type MSISDNRepository interface{
-	LookupCountryCode(string) (string, int, *errs.AppError)
+	// LookupCountryCode takes a string full number and returns the respective country identifier it belongs to,
+	// the country code and the country's prefix length, or an error
+	LookupCountryCode(string) (string, int,  int, *errs.AppError)
+	// LookupMobileOperator takes a country identifier and a significant number and returns an MNO, length of carrier prefix, or an error
 	LookupMobileOperator(string, string) (string, int, *errs.AppError)
 }
 
-// LookupCountryCode takes a string country code and returns the respective country identifier it belongs to, the country's prefix length, or an error
-func (repo MSISDNRepositoryDb) LookupCountryCode(cc string) (string, int, *errs.AppError){	
+
+func (repo MSISDNRepositoryDb) LookupCountryCode(fullnumber string) (string, int, int,  *errs.AppError){	
 	panic("panic!!")
 }
 
-// LookupMobileOperator takes a country identifier and a NCD/NPA code and returns an MNO
-func (repo MSISDNRepositoryDb) LookupMobileOperator(cc string, prefix string) (string, int,  *errs.AppError){
+
+func (repo MSISDNRepositoryDb) LookupMobileOperator(significantNumber string, prefix string) (string, int,  *errs.AppError){
 	panic("panic!!")
 }
