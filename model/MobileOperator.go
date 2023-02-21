@@ -12,5 +12,4 @@ type MobileOperator struct {
 	// PrefixLength is the length of the MNO's carrier code, used to
 	// trim away the unneeded carrier code to isolate the subscriber number
 	PrefixLength int
-
 }
