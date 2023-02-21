@@ -36,7 +36,7 @@ func (m *MockMSISDNService) EXPECT() *MockMSISDNServiceMockRecorder {
 }
 
 // LookupMSISDN mocks base method.
-func (m *MockMSISDNService) LookupMSISDN(arg0 uint64) (*dto.NumberLookupResponse, *errs.AppError) {
+func (m *MockMSISDNService) LookupMSISDN(arg0 string) (*dto.NumberLookupResponse, *errs.AppError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupMSISDN", arg0)
 	ret0, _ := ret[0].(*dto.NumberLookupResponse)

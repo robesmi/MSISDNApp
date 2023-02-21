@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/robesmi/MSISDNApp/mocks/service"
@@ -63,8 +62,8 @@ func TestSendingNegativeNumberAsInput(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	teardown := setup(t,recorder)
 	defer teardown()
-	input := 212315231
-	mockService.EXPECT().LookupMSISDN(uint64(input)).Return(nil, errs.UnexpectedError("Invalid input"))
+	input := "212315231"
+	mockService.EXPECT().LookupMSISDN(input).Return(nil, errs.UnexpectedError("Invalid input"))
 
 	//Act
 	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
@@ -105,8 +104,8 @@ func TestMassiveNumber(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	teardown := setup(t,recorder)
 	defer teardown()
-	var input uint64 = 2371289370190232132
-	mockService.EXPECT().LookupMSISDN(uint64(input)).Return(nil, errs.UnexpectedError("Invalid input"))
+	var input  = "2371289370190232132"
+	mockService.EXPECT().LookupMSISDN(input).Return(nil, errs.UnexpectedError("Invalid input"))
 
 	//Act
 	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
