@@ -1,7 +1,7 @@
 package dto
 
 type CountryLookupResponse struct {
-	CountryCode int
+	CountryCode string
 	CountryIdentifier string
 	CountryCodeLength int
 }
