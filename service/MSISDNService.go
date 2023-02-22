@@ -11,7 +11,7 @@ type DefaultMSISDNService struct {
 	repo repository.MSISDNRepository
 }
 
-func NewMSISDNService(repository repository.MSISDNRepositoryDb) DefaultMSISDNService{
+func NewMSISDNService(repository repository.MSISDNRepository) DefaultMSISDNService{
 	return DefaultMSISDNService{repository}
 }
 
@@ -26,24 +26,24 @@ type MSISDNService interface {
 //go:generate mockgen -destination=../mocks/service/mockMSISDNService.go -package=service github.com/robesmi/MSISDNApp/service MSISDNService
 func (s DefaultMSISDNService) LookupMSISDN(input string) (*dto.NumberLookupResponse, *errs.AppError){
 	
-	ci,cc, ccLength, err := s.repo.LookupCountryCode(input)
+	countryResponse, err := s.repo.LookupCountryCode(input)
 	if err != nil {
 		return nil, err
 	}
-	significantNumber := fmt.Sprint(input[ccLength:])
+	significantNumber := fmt.Sprint(input[countryResponse.CountryCodeLength:])
 	
-	mno, carrierLength, err := s.repo.LookupMobileOperator(ci, significantNumber)
+	mnoResponse, err := s.repo.LookupMobileOperator(countryResponse.CountryIdentifier, significantNumber)
 	if err != nil{
 		return nil, err
 	}
 
-	subscriberNumber := fmt.Sprint(significantNumber[carrierLength:])
+	subscriberNumber := fmt.Sprint(significantNumber[mnoResponse.PrefixLength:])
 
 	var response = dto.NumberLookupResponse{
-		MNO: mno,
+		MNO: mnoResponse.MNO,
 		SN: subscriberNumber,
-		CI: ci,
-		CC: cc,
+		CI: countryResponse.CountryIdentifier,
+		CC: countryResponse.CountryCode,
 	}
 	return &response, nil
 }
