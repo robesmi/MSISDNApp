@@ -25,7 +25,7 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 		number := strings.Trim(input,"0")
 		number = strings.Trim(number,"-")
 		number = strings.ReplaceAll(number," ","")
-		var validNumberRegex = regexp.MustCompile(`[0-9]{7,15}`)
+		var validNumberRegex = regexp.MustCompile(`^[0-9]{7,15}$`)
 		if !validNumberRegex.MatchString(number){
 			writeResponse(c, http.StatusBadRequest, "Invalid Number Entered")
 
