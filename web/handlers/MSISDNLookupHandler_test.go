@@ -100,7 +100,7 @@ func TestNumberLookup(t *testing.T) {
 			defer teardown()
 
 			if test.CallsService{
-				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.AppError{ Code: test.ExpectedReturnCode})
+				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, &errs.AppError{ Code: test.ExpectedReturnCode})
 			}
 
 			//Act
