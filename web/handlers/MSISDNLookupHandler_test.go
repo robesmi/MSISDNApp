@@ -36,106 +36,77 @@ func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 
 }
 
-func TestEmptyInput(t *testing.T) {
+func TestNumberLookup(t *testing.T) {
 
-	//Arrange
-	recorder := httptest.NewRecorder()
-	teardown := setup(t,recorder)
-	defer teardown()
+	tt := []struct{
+		Name string
+		Input string
+		TestErrorMessage string
+		ExpectedReturnCode int
+		CallsService bool
 
-	//Act
-	req, err := http.NewRequest(http.MethodGet,"/lookup",nil)
-	if err != nil{
-		t.Fatalf("Could not make request")
+	}{
+		{
+			Name: 				"Test Empty Input",
+			Input: 				"",
+			TestErrorMessage: 	"Failed while testing empty input value",
+			ExpectedReturnCode:	http.StatusBadRequest,
+			CallsService: 		false,
+		},
+		{
+			Name: 				"Test Negative input",
+			Input:				"-212315231",
+			TestErrorMessage: 	"Failed while testing negative input value",
+			ExpectedReturnCode:	http.StatusInternalServerError,
+			CallsService:		true,
+		},
+		{
+			Name:				"Test Invalid Number",
+			Input:				"lorem ipsum",
+			TestErrorMessage: 	"Failed while testing invalid input",
+			ExpectedReturnCode: http.StatusBadRequest,
+			CallsService:		false,
+
+		},
+		{
+			Name: 				"Test Massive Number",
+			Input:				"237128937019023213123121232",
+			TestErrorMessage:	"Failed while testing massive input value",
+			ExpectedReturnCode: http.StatusBadRequest,
+			CallsService:		false,
+		},
+		{
+			Name:				"Test Sending a base 64 image as input",
+			Input:				"/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAFUAgoDASIAAhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAABAABAgMFBgcI/8QATRAAAQMCBAQCBwUECAMFCQEAAQACAwQRBRIhYQYTMVFBcQcUIjKBkaEjQlKxwUNigtEVJDNTcpKi4QjC8CY0Y6OyFiUnNTZEZIOz8f/EABsBAAMBAQEBAQAAAAAAAAAAAAABAgMEBQYH/8QAMBEBAQACAgIBAgQDCQEBAAAAAAECEQMSBCExIkEFEzJRcZGhBiMzQmGBscHwFOH/2gAMAwEAAhEDEQA/APl2yVtlOyVl7TnQ1SU7JiD2TIyVk9krJgk4SsEkyJOkkgqcJJJIBkkkyYOnTJBMJBOFEdU4TCScFRBToJJOFEFOgkkk10kge6dMkgHumSSQRBOmTpgkkkkAkk6VkEZJPZKyNgySeyVtkgilZTtsmtsgI2CVgp2KSRI2TWU8qfKkELbJ7KeXZOGpbCuyfKrAxSDNkthTlT5VdkSyJBQWqJbsiSxRLNktmHypsqILE2RI1BaolqJLFEsQYYsUS1FFiiWI2YbKmyoksUciNmHypi1EFijkQew5amLUQWJi1Bhy1NlPZX5Usp7I2FmVLKrcpSypltVlTZVdZNZMKi1NZWkbJiEBVZKysITWTG0LJ7KVk1tkyMknslZMIplKxTJgyQSSTB06ZOmDhOCmCdAOnCYJ0JOnTJJUHTqKcII6SSVkyJOkE4CQIJwlZSAQEbJwFIN/6KcBAQsntuphqcBBK7JZfNWZUrJBWAkRsFZZNZGzRslZTyqQakFYapBqmGqYYlslYYpBmyta1SDFOwqDFIMVwYrAxLZbDcvZS5aJDFIM2S2NhOWmMaM5aXKS2NgTHsm5aP5WyYwpbMBy0xjR5hUTFsls9gTGomNHcpMYtkbPYEx7KJj2Rxi2UTEjZ7A8tNy0cY1ExI2NgjGomNGmJRMaNnsEY03LRpiUeWjY2hkSLFflSy7LQth8h7KJYisqbIg9hciiWosxqDo9kxsNlTFqILFEtQagtTWVxamLUwqITWVhamLU4FdkxCsskQmFRCVtlMtSsmEEgpWSsmDBOlZPbsmCThKydCSST2SskVIBOkAnsgEAnATgKQCCRAUgFIBSDUiQAUgFMNUg1AQDU4arMuycNQFeVPlVgbspBuyAqypFuiuypZNkgoyp8hV4YpCNIBwwqQYiBEeymIktgMGKxrNl1nBPAmPcWiaXDIqeKlhOV9TUvLI8/wCBtgS53S9hYX1IQ3FXC2L8L4i2ixenax0jC+GWRU1YOqsZ1SSU1NTCSSSRUiolJJBIO6qtySSCQKiUkkGiU3ikkgHTDqkkpBDqpBJJSDhOEkkESSSSAiVA9UklUCDuqrckkrgVvVLkklpFxS5VOSSWkWqd1VZSSWkVDFR8UkkzMUkkkKIJXKSSk4fqmPRJJIRByrKSSDVuKrckkkuKnqpySSqLil/ZdHwv70XmkkuLzv0w8/01v+mDXAsLHhn/AEXmB8Eklt4n+Gnx/wBEIJvBJJdLYkkkkGSQSSQCSSSQH//Z",
+			TestErrorMessage: 	"Failed while testing base64 image input value",
+			ExpectedReturnCode: http.StatusBadRequest,
+			CallsService: 		false,
+		},
 	}
-	router.ServeHTTP(recorder,req)
 
-	//Assert
-	if recorder.Code != http.StatusBadRequest{
-		t.Error("Failed while testing invalid input value")
-	}
-}
+	for _, test := range tt{
+		fn := func(t *testing.T){
 
-func TestSendingNegativeNumberAsInput(t *testing.T) {
+			//Arrange
+			recorder := httptest.NewRecorder()
+			teardown := setup(t,recorder)
+			defer teardown()
+			if test.CallsService{
+				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.UnexpectedError(""))
+			}
 
-	//Arrange
-	recorder := httptest.NewRecorder()
-	teardown := setup(t,recorder)
-	defer teardown()
-	input := "212315231"
-	mockService.EXPECT().LookupMSISDN(input).Return(nil, errs.UnexpectedError("Invalid input"))
+			//Act
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/lookup?number=%v",test.Input),nil)
+			if err!= nil{
+				t.Fatalf("Could not make request in" + test.Name)
+			}
+			router.ServeHTTP(recorder,req)
 
-	//Act
-	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
-	if err != nil{
-		t.Fatalf("Could not make request")
-	}
-	router.ServeHTTP(recorder,req)
-
-	//Assert
-	if recorder.Code != http.StatusInternalServerError{
-		t.Error("Failed while testing invalid input value")
-	}
-}
-
-func TestInvalidNumber(t *testing.T) {
-
-	//Arrange
-	recorder := httptest.NewRecorder()
-	teardown := setup(t,recorder)
-	defer teardown()
-	input := "lorem ipsum"
-
-	//Act
-	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
-	if err != nil{
-		t.Fatalf("Could not make request")
-	}
-	router.ServeHTTP(recorder,req)
-
-	//Assert
-	if recorder.Code != http.StatusBadRequest{
-		t.Error("Failed while testing invalid input value")
-	}
-}
-func TestMassiveNumber(t *testing.T) {
-
-	//Arrange
-	recorder := httptest.NewRecorder()
-	teardown := setup(t,recorder)
-	defer teardown()
-	var input  = "237128937019023213123121232"
-
-	//Act
-	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
-	if err != nil{
-		t.Fatalf("Could not make request")
-	}
-	router.ServeHTTP(recorder,req)
-
-	//Assert
-	if recorder.Code != http.StatusBadRequest{
-		t.Error("Failed while testing invalid input value")
-	}
-}
-
-func TestSendingABase64ImageAsInput(t *testing.T) {
-
-	//Arrange
-	recorder := httptest.NewRecorder()
-	teardown := setup(t,recorder)
-	defer teardown()
-	input := "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAFUAgoDASIAAhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAABAABAgMFBgcI/8QATRAAAQMCBAQCBwUECAMFCQEAAQACAwQRBRIhYQYTMVFBcQcUIjKBkaEjQlKxwUNigtEVJDNTcpKi4QjC8CY0Y6OyFiUnNTZEZIOz8f/EABsBAAMBAQEBAQAAAAAAAAAAAAABAgMEBQYH/8QAMBEBAQACAgIBAgQDCQEBAAAAAAECEQMSBCExIkEFEzJRcZGhBiMzQmGBscHwFOH/2gAMAwEAAhEDEQA/APl2yVtlOyVl7TnQ1SU7JiD2TIyVk9krJgk4SsEkyJOkkgqcJJJIBkkkyYOnTJBMJBOFEdU4TCScFRBToJJOFEFOgkkk10kge6dMkgHumSSQRBOmTpgkkkkAkk6VkEZJPZKyNgySeyVtkgilZTtsmtsgI2CVgp2KSRI2TWU8qfKkELbJ7KeXZOGpbCuyfKrAxSDNkthTlT5VdkSyJBQWqJbsiSxRLNktmHypsqILE2RI1BaolqJLFEsQYYsUS1FFiiWI2YbKmyoksUciNmHypi1EFijkQew5amLUQWJi1Bhy1NlPZX5Usp7I2FmVLKrcpSypltVlTZVdZNZMKi1NZWkbJiEBVZKysITWTG0LJ7KVk1tkyMknslZMIplKxTJgyQSSTB06ZOmDhOCmCdAOnCYJ0JOnTJJUHTqKcII6SSVkyJOkE4CQIJwlZSAQEbJwFIN/6KcBAQsntuphqcBBK7JZfNWZUrJBWAkRsFZZNZGzRslZTyqQakFYapBqmGqYYlslYYpBmyta1SDFOwqDFIMVwYrAxLZbDcvZS5aJDFIM2S2NhOWmMaM5aXKS2NgTHsm5aP5WyYwpbMBy0xjR5hUTFsls9gTGomNHcpMYtkbPYEx7KJj2Rxi2UTEjZ7A8tNy0cY1ExI2NgjGomNGmJRMaNnsEY03LRpiUeWjY2hkSLFflSy7LQth8h7KJYisqbIg9hciiWosxqDo9kxsNlTFqILFEtQagtTWVxamLUwqITWVhamLU4FdkxCsskQmFRCVtlMtSsmEEgpWSsmDBOlZPbsmCThKydCSST2SskVIBOkAnsgEAnATgKQCCRAUgFIBSDUiQAUgFMNUg1AQDU4arMuycNQFeVPlVgbspBuyAqypFuiuypZNkgoyp8hV4YpCNIBwwqQYiBEeymIktgMGKxrNl1nBPAmPcWiaXDIqeKlhOV9TUvLI8/wCBtgS53S9hYX1IQ3FXC2L8L4i2ixenax0jC+GWRU1YOqsZ1SSU1NTCSSSRUiolJJBIO6qtySSCQKiUkkGiU3ikkgHTDqkkpBDqpBJJSDhOEkkESSSSAiVA9UklUCDuqrckkrgVvVLkklpFxS5VOSSWkWqd1VZSSWkVDFR8UkkzMUkkkKIJXKSSk4fqmPRJJIRByrKSSDVuKrckkkuKnqpySSqLil/ZdHwv70XmkkuLzv0w8/01v+mDXAsLHhn/AEXmB8Eklt4n+Gnx/wBEIJvBJJdLYkkkkGSQSSQCSSSQH//Z"
-
-	//Act
-	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
-	if err != nil{
-		t.Fatalf("Could not make request")
-	}
-	router.ServeHTTP(recorder,req)
-
-	//Assert
-	if recorder.Code != http.StatusBadRequest{
-		t.Error("Failed while testing invalid input value")
+			//Assert
+			if recorder.Code != test.ExpectedReturnCode{
+				t.Error(test.TestErrorMessage)
+			}
+		}
+		t.Run(test.Name, fn)
 	}
 }
