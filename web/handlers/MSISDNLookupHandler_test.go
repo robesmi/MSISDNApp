@@ -104,8 +104,7 @@ func TestMassiveNumber(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	teardown := setup(t,recorder)
 	defer teardown()
-	var input  = "2371289370190232132"
-	mockService.EXPECT().LookupMSISDN(input).Return(nil, errs.UnexpectedError("Invalid input"))
+	var input  = "237128937019023213123121232"
 
 	//Act
 	req, err := http.NewRequest(http.MethodGet,fmt.Sprintf("/lookup?number=-%v",input),nil)
@@ -115,7 +114,7 @@ func TestMassiveNumber(t *testing.T) {
 	router.ServeHTTP(recorder,req)
 
 	//Assert
-	if recorder.Code != http.StatusInternalServerError{
+	if recorder.Code != http.StatusBadRequest{
 		t.Error("Failed while testing invalid input value")
 	}
 }
