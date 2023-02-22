@@ -64,7 +64,7 @@ func TestNonExistantOperatorNumber(t *testing.T) {
 
 	gomock.InOrder(
 		mockRepo.EXPECT().LookupCountryCode(input).Return(&expCountryResponse, nil),
-		mockRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryCode, nextInput).Return(nil, expErr),
+		mockRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryIdentifier, nextInput).Return(nil, expErr),
 	)
 
 	// Act
