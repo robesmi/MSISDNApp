@@ -6,3 +6,7 @@ type NumberLookupResponse struct{
 	SN string	`json:"Subscriber Number"`
 	CI string	`json:"Country Identifier"`
 }
+
+func (r *NumberLookupResponse) Compare(a NumberLookupResponse) bool {
+	return r.MNO == a.MNO && r.CC == a.CC && r.SN == a.SN && r.CI == a.CI
+}
