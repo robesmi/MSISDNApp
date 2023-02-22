@@ -57,7 +57,7 @@ func TestNonExistantOperatorNumber(t *testing.T) {
 	expErr := errs.NoCarriersFound("Invalid operator number")
 
 	expCountryResponse := dto.CountryLookupResponse{
-		CountryCode: 389,
+		CountryCode: "389",
 		CountryIdentifier: "mk",
 		CountryCodeLength: 3,
 	}
@@ -86,7 +86,7 @@ func TestValidNumber(t *testing.T) {
 	secondInput := "77123456"
 
 	expCountryResponse := dto.CountryLookupResponse{
-		CountryCode: 389,
+		CountryCode: "389",
 		CountryIdentifier: "mk",
 		CountryCodeLength: 3,
 	}
@@ -96,7 +96,7 @@ func TestValidNumber(t *testing.T) {
 	}
 	expFunctionResponse := dto.NumberLookupResponse{
 		MNO: "A1",
-		CC: 389,
+		CC: "389",
 		SN: "123456",
 		CI: "mk",
 	} 

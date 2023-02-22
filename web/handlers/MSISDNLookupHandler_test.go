@@ -89,6 +89,13 @@ func TestNumberLookup(t *testing.T) {
 			ExpectedReturnCode:	http.StatusOK,
 			CallsService: 		true,
 		},
+		{
+			Name:				"Valid number with whitespace",
+			Input: 				"389 77 123 456",
+			TestErrorMessage: 	"Failed while testing valid number with whitespace",
+			ExpectedReturnCode: http.StatusOK,
+			CallsService: 		true,
+		},
 	}
 
 	for _, test := range tt{
@@ -106,7 +113,7 @@ func TestNumberLookup(t *testing.T) {
 			//Act
 			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/lookup?number=%v",test.Input),nil)
 			if err!= nil{
-				t.Fatalf("Could not make request in" + test.Name)
+				t.Fatalf("Could not make request in " + test.Name)
 			}
 			router.ServeHTTP(recorder,req)
 
