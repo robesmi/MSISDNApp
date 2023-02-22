@@ -82,6 +82,13 @@ func TestNumberLookup(t *testing.T) {
 			ExpectedReturnCode: http.StatusBadRequest,
 			CallsService: 		false,
 		},
+		{
+			Name: 				"Valid Number",
+			Input:				"38977123456",
+			TestErrorMessage: 	"Failed while testing valid number",
+			ExpectedReturnCode:	http.StatusOK,
+			CallsService: 		true,
+		},
 	}
 
 	for _, test := range tt{
@@ -91,8 +98,9 @@ func TestNumberLookup(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			teardown := setup(t,recorder)
 			defer teardown()
+
 			if test.CallsService{
-				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.UnexpectedError(""))
+				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.AppError{ Code: test.ExpectedReturnCode})
 			}
 
 			//Act
