@@ -103,7 +103,7 @@ func TestValidNumber(t *testing.T) {
 
 	gomock.InOrder(
 		mockRepo.EXPECT().LookupCountryCode(input).Return(&expCountryResponse, nil),
-		mockRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryCode, secondInput).Return(&expMOResponse, nil),
+		mockRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryIdentifier, secondInput).Return(&expMOResponse, nil),
 	)
 
 	// Act
