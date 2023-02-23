@@ -22,7 +22,8 @@ func Start(){
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
 	
-	router.GET("/lookup", mh.NumberLookup)
+	router.POST("/lookup", mh.NumberLookup)
+
 
 	//Starting up server
 	//router.Run(os.Getenv("APP_PORT"))
