@@ -2,9 +2,8 @@ package repository
 
 import (
 	"database/sql"
-
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
 )

@@ -19,9 +19,10 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 	// Check for empty input, trim and validate number
 	input := c.Query("number")
 	if input == ""{
-		writeResponse(c, http.StatusBadRequest,"No Number Entered")
+		//If no input, just serve up the page
+		c.HTML(http.StatusOK,"index.html",nil)
 	}else{
-
+		
 		number := strings.Trim(input,"0")
 		number = strings.Trim(number,"-")
 		number = strings.TrimSpace(number)

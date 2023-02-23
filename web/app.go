@@ -3,6 +3,7 @@ package web
 import (
 	"time"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/repository"
 	"github.com/robesmi/MSISDNApp/service"
@@ -19,8 +20,9 @@ func Start(){
 	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo)}
 
 	//Wiring
+	router.LoadHTMLGlob("templates/*.html")
+	
 	router.GET("/lookup", mh.NumberLookup)
-
 
 	//Starting up server
 	//router.Run(os.Getenv("APP_PORT"))
