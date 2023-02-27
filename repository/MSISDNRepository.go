@@ -32,7 +32,7 @@ func (repo MSISDNRepositoryDb) LookupCountryCode(fullnumber string) (*dto.Countr
 	err := repo.db.Get(&response, sqlQuery, fullnumber)
 	if err != nil{
 		if err == sql.ErrNoRows{
-			return nil, errs.NumberNotFoundError("Country not found")
+			return nil, errs.NumberNotFoundError("Country not found or invalid number entered")
 		}else{
 			return nil, errs.UnexpectedError("Unexpected database error")
 		}
@@ -46,7 +46,7 @@ func (repo MSISDNRepositoryDb) LookupMobileOperator(ci string, significantNumber
 	err := repo.db.Get(&response, sqlQuery, ci, significantNumber)
 	if err != nil{
 		if err == sql.ErrNoRows{
-			return nil, errs.NoCarriersFound("Carrier not found")
+			return nil, errs.NoCarriersFound("Carrier not found or invalid number entered")
 		}else{
 			return nil, errs.UnexpectedError("Unexpected database error")
 		}
