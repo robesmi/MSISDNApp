@@ -4,13 +4,9 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-COPY go.mod ./
-COPY go.sum ./
+COPY . ./
 
 RUN go mod download
-
-COPY . ./
-COPY docker/init.sql /docker-entrypoint-initdb.d/init.sql
 
 ENV APP_PORT=8080
 
