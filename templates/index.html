@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    
+</head>
+
+<body>
+    <div>
+        <label for="msisdn-input"></label>
+        <input type="text" placeholder="+38977123456" id="msisdn-input">
+        <input type="submit" id="msisdn-input-submit"></input>
+    </div>
+    <script
+    src="https://code.jquery.com/jquery-3.6.3.js"
+    integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
+    crossorigin="anonymous"></script>
+    <script>
+        $( document ).ready(function(){
+            $("#msisdn-input-submit").click( function(){
+                var number = $("#msisdn-input").val()
+                var data = { "number": number }
+                console.log(data)
+                fetch("http://localhost:8080/lookup",{
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                    .then(function(jsonResponse) {  
+
+                    if ($(".resultWrapper").length > 0){
+                        $(".resultWrapper").remove()
+                    }
+
+                    const resultWrapper = document.createElement("div")
+                    resultWrapper.classList.add("resultWrapper")
+                    for(var key in jsonResponse){
+                        var resultNode = document.createTextNode(key + ": " + jsonResponse[key] + "\n")
+                        var br = document.createElement("br")
+                        resultWrapper.appendChild(resultNode)
+                        resultWrapper.appendChild(br)
+                    }
+                    document.body.appendChild(resultWrapper)
+                });
+            })
+        
+        })
+        
+</script>
+</body>
+</html>
