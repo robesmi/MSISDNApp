@@ -1,7 +1,10 @@
 package web
 
 import (
+	"net/http"
+	"os"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -22,19 +25,22 @@ func Start(){
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
 	
+	router.GET("/", func(c *gin.Context){
+		c.Redirect(http.StatusMovedPermanently, "/lookup")
+	})
+	router.GET("/lookup", mh.GetLookupPage)
 	router.POST("/lookup", mh.NumberLookup)
 
 
 	//Starting up server
-	//router.Run(os.Getenv("APP_PORT"))
-	router.Run()
+	router.Run(":" + os.Getenv("APP_PORT"))
 }
 
 // getStubDbClient initializes the db connection and returns it to Start
 // Using mysql as a placeholder until a solid solution is decided on
 func getStubDbClient() *sqlx.DB{
 
-	client, err := sqlx.Open("mysql","root:testpassword@tcp(localhost:3306)/msisdn")
+	client, err := sqlx.Open("mysql","docker:password@tcp(godockerDB)/msisdn")
 	if err != nil {
 		panic(err)
 	}

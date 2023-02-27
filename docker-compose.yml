@@ -1,0 +1,36 @@
+version: '3'
+
+networks:
+  msisdnapp:
+    driver: bridge
+
+services:
+  project:
+    container_name: projectapp
+    build:
+      context: .
+    environment:
+      APP_PORT: 8080
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    networks:
+      - msisdnapp
+  db:
+    image: mysql
+    container_name: godockerDB
+    ports:
+      - "3366:3306"
+    expose:
+      - "3306"
+    environment:
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: msisdn
+      MYSQL_ROOT_PASSWORD: testpassword
+    restart: on-failure
+    volumes:
+      - "./docker/init.sql:/docker-entrypoint-initdb.d/1.sql"
+    networks:
+      - msisdnapp

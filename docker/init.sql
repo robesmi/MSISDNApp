@@ -1,8 +1,6 @@
-CREATE USER IF NOT EXISTS `docker`@`localhost`;
-DROP DATABASE IF EXISTS `test`;
-CREATE DATABASE test;
-GRANT ALL PRIVILEGES ON test TO docker;
-USE msisdn;
+DROP DATABASE IF EXISTS `msisdn`;
+CREATE DATABASE IF NOT EXISTS `msisdn`;
+USE `msisdn`;
 DROP TABLE IF EXISTS `countries`;
 CREATE TABLE `countries` (
     `country_number_format` varchar(20) NOT NULL,
