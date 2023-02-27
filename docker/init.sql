@@ -47,7 +47,7 @@ INSERT INTO `mobile_operators` VALUES
     ("pt","^91[0-9]{7}$", "Vodafone Portugal",2),
     ("pt","^921[0-9]{6}$", "Vodafone Portugal",3),
     ("pt","^922[0-2][0-9]{5}$", "CTT CORREIOS DE PORTUGAL, S.A.",3),
-    ("pt","^924[0-4][0-9]{5}$", "TMN - TELECOMUNICAÇÕES MÓVEIS NACIONAIS, SA",3).
+    ("pt","^924[0-4][0-9]{5}$", "TMN - TELECOMUNICAÇÕES MÓVEIS NACIONAIS, SA",3),
     ("bb","^(23\d|24\d|25[0-4])[0-9]{7}$", "Liberty Latin America",3),
     ("bb","^(45[0-9])[0-9]{7}$", "Sunbeach",3),
     ("ma","^(?!^61(2|4|7|9)[0-9]{5}$)611[0-9]{6}$", "Maroc Telecom",3),
