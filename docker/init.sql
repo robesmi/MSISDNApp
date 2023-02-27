@@ -51,4 +51,4 @@ INSERT INTO `mobile_operators` VALUES
     ("bb","^(23\d|24\d|25[0-4])[0-9]{7}$", "Liberty Latin America",3),
     ("bb","^(45[0-9])[0-9]{7}$", "Sunbeach",3),
     ("ma","^(?!^61(2|4|7|9)[0-9]{5}$)611[0-9]{6}$", "Maroc Telecom",3),
-    ("ma","^61(2|4|7|9)[0-9]{5}$", "Orange Maroc",3);
+    ("ma","^61(2|4|7|9)[0-9]{6}$", "Orange Maroc",3);
