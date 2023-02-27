@@ -17,27 +17,30 @@ type LookupRequest struct{
 	Number string `json:"number" xml:"number"`
 }
 
-func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
+func (msh MSISDNLookupHandler) GetLookupPage(c *gin.Context){
+	c.HTML(http.StatusOK, "index.html",nil)
+}
 
+func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 
 	// Check for empty input, trim and validate number
 	var req LookupRequest
 	if err := c.ShouldBind(&req); err != nil{
-		writeResponse(c, http.StatusBadRequest, "Bad Request")
+		writeResponse(c, http.StatusBadRequest, map[string]string{ "error":"Enter a proper MSISDN ex: 38977123456"})
 		return
 	}
 	if req.Number == ""{
-		//If no input, just serve up the page
-		c.HTML(http.StatusOK,"index.html",nil)
+		//If no input
+		writeResponse(c,http.StatusBadRequest,map[string]string{ "error":"Please enter a MSISDN"})
 		return
 	}
-		
+
 		number := strings.Trim(req.Number,"0")
 		m1 := regexp.MustCompile(`\D`)
 		number = m1.ReplaceAllString(number,"")
 		var validNumberRegex = regexp.MustCompile(`^[0-9]{7,15}$`)
 		if !validNumberRegex.MatchString(number){
-			writeResponse(c, http.StatusBadRequest, "Invalid Number Entered")
+			writeResponse(c, http.StatusBadRequest, map[string]string{ "error":"The MSISDN must only contain digits and be 7-15 digits long"})
 			return
 
 		}
@@ -51,10 +54,6 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 			
 			// Send response back
 			writeResponse(c, http.StatusOK, response)
-			return
-		
-	
-
 }
 
 

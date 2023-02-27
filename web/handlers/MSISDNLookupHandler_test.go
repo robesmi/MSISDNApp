@@ -1,10 +1,12 @@
 package handlers
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/robesmi/MSISDNApp/mocks/service"
@@ -25,7 +27,7 @@ func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 
 	gin.SetMode(gin.TestMode)
 	ctx, router = gin.CreateTestContext(w)
-	router.GET("/lookup", lh.NumberLookup)
+	router.POST("/lookup", lh.NumberLookup)
 
 
 	return func() {
@@ -109,9 +111,14 @@ func TestNumberLookup(t *testing.T) {
 			if test.CallsService{
 				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, &errs.AppError{ Code: test.ExpectedReturnCode})
 			}
+			jsonReq := LookupRequest{
+				Number: test.Input,
+			}
+			jsonVal,_ := json.Marshal(jsonReq)	
 
 			//Act
-			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/lookup?number=%v",test.Input),nil)
+			req, err := http.NewRequest(http.MethodPost,"/lookup",bytes.NewBuffer(jsonVal))
+			req.Header.Set("Content-Type","application/json")
 			if err!= nil{
 				t.Fatalf("Could not make request in " + test.Name)
 			}

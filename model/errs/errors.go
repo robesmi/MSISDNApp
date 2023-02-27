@@ -36,6 +36,6 @@ func InvalidInputError(message string) *AppError{
 func NoCarriersFound(message string) *AppError{
 	return &AppError{
 		Message: message,
-		Code: http.StatusInternalServerError,
+		Code: http.StatusBadRequest,
 	}
 }
