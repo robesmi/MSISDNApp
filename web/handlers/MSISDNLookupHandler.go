@@ -35,7 +35,7 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 		return
 	}
 
-		number := strings.Trim(req.Number,"0")
+		number := strings.TrimLeft(req.Number,"0")
 		m1 := regexp.MustCompile(`\D`)
 		number = m1.ReplaceAllString(number,"")
 		var validNumberRegex = regexp.MustCompile(`^[0-9]{7,15}$`)
