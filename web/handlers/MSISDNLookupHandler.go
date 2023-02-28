@@ -26,7 +26,7 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 	// Check for empty input, trim and validate number
 	var req LookupRequest
 	if err := c.ShouldBind(&req); err != nil{
-		writeResponse(c, http.StatusBadRequest, map[string]string{ "error":"Enter a proper MSISDN ex: 38977123456"})
+		writeResponse(c, http.StatusBadRequest, map[string]string{ "error":"API call type should be string"})
 		return
 	}
 	if req.Number == ""{
