@@ -31,8 +31,13 @@ func Start(){
 	})
 	router.GET("/lookup", mh.GetLookupPage)
 	router.POST("/api/lookup", mh.NumberLookup)
+	
 	router.GET("/login", ah.GetLoginPage)
-	router.GET("/oauth/redirect/", ah.GetAccessCode)
+	router.GET("/oauth/google", ah.HandleGoogleLogin)
+	router.GET("/oauth/google/callback", ah.HandleGoogleCode)
+	router.GET("/oauth/github", ah.HandleGithubLogin)
+	router.GET("/oauth/github/callback", ah.HandleGithubCode)
+	
 
 
 	//Starting up server

@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/robesmi/MSISDNApp/model"
 	"golang.org/x/oauth2"
@@ -60,13 +62,30 @@ func init(){
 
 // GetLoginPage returns the login page that will be used for presenting the
 // available authentication methods
+//TODO: generate state dynamically and save it in session
 func (a AuthHandler)GetLoginPage(c *gin.Context){
+	c.HTML(http.StatusOK, "index.html", nil)
+}
+
+// HandleGoogleLogin redirects user to the google oauth2 authorization page
+func (a AuthHandler) HandleGoogleLogin(c *gin.Context){
+	url := googleConfig.AuthCodeURL("state")
+	c.Redirect(http.StatusTemporaryRedirect,url)
+}
+// HandleGoogleCode receives the access code from google's redirect and makes a post request
+// to receive the appropriate access token and refresh token
+func (a AuthHandler) HandleGoogleCode(c *gin.Context){
+	panic("panic!!")
+}
+// HandleGithubLogin redirects user to the github oauth2 authorization page
+//TODO: generate state dynamically and save it in session
+func (a AuthHandler) HandleGithubLogin(c *gin.Context){
+	url := githubConfig.AuthCodeURL("state")
+	c.Redirect(http.StatusTemporaryRedirect,url)
+}
+// HandleGithubCode receives the access code from google's redirect and makes a post request
+// to receive the appropriate access token and refresh token
+func (a AuthHandler) HandleGithubCode(c *gin.Context){
 	panic("panic!!")
 }
 
-// GetAccessCode receives the authorization code from the OAuth2 workflow and
-// makes a post request to the Identity Provider's oauth token endpoint
-// to receive an access token and refresh token
-func (a AuthHandler)GetAccessCode(c *gin.Context){
-	panic("panic!!")
-}
