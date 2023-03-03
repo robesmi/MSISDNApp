@@ -21,6 +21,7 @@ func Start(){
 	dbClient := getStubDbClient()
 	msrepo := repository.NewMSISDNRepository(dbClient)
 	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo)}
+	ah := handlers.AuthHandler{}
 
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
@@ -29,7 +30,9 @@ func Start(){
 		c.Redirect(http.StatusMovedPermanently, "/lookup")
 	})
 	router.GET("/lookup", mh.GetLookupPage)
-	router.POST("/lookup", mh.NumberLookup)
+	router.POST("/api/lookup", mh.NumberLookup)
+	router.GET("/login", ah.GetLoginPage)
+	router.GET("/oauth/redirect/", ah.GetAccessCode)
 
 
 	//Starting up server
