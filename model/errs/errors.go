@@ -39,3 +39,10 @@ func NoCarriersFound(message string) *AppError{
 		Code: http.StatusBadRequest,
 	}
 }
+
+func UserNotFound() *AppError{
+	return &AppError{
+		Message: "User not found",
+		Code: http.StatusBadRequest,
+	}
+}
