@@ -96,10 +96,10 @@ func ValidateToken(token string) *errs.AppError{
 		}else if ve.Errors&jwt.ValidationErrorExpired!= 0{
 			return errs.ExpiredToken()
 		}else {
-			return errs.TokenError("Unexpected error")
+			return errs.TokenError("Unexpected error:" + ve.Error())
 		}
 	}else{
-		return errs.TokenError("idk man")
+		return errs.TokenError("Unexpected error:" + ve.Error())
 	}
 }
 

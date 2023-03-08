@@ -46,3 +46,37 @@ func UserNotFound() *AppError{
 		Code: http.StatusBadRequest,
 	}
 }
+
+func UserAlreadyExists() *AppError{
+	return &AppError{
+		Message: "User already exists",
+		Code: http.StatusBadRequest,
+	}
+}
+
+func InvalidCredentials() *AppError{
+	return &AppError{
+		Message: "Invalid username or password",
+		Code: http.StatusBadRequest,
+	}
+}
+
+func TokenError(message string) *AppError{
+	return &AppError{
+		Message: "Error with token: " + message,
+		Code: http.StatusInternalServerError,
+	}
+}
+func MalformedToken() *AppError{
+	return &AppError{
+		Message: "Not a token",
+		Code: http.StatusInternalServerError,
+	}
+}
+func ExpiredToken() *AppError{
+	return &AppError{
+		Message: "Token is expired",
+		Code: http.StatusInternalServerError,
+	}
+}
+
