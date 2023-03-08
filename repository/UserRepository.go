@@ -3,12 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"log"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/errs"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepositoryDb struct {
@@ -20,18 +17,20 @@ func NewAuthRepository(client *sqlx.DB) UserRepositoryDb {
 }
 
 type UserRepository interface {
-	GetUserByEmail(string)
-	// RegisterNativeUser inserts a new local user with username, role and refresh token
-	RegisterNativeUser(string, string) (*model.Login, *errs.AppError)
-	// GetNativeUser will fetch a local user with username, role and refresh token
-	GetNativeUser(string,string) (*model.Login, *errs.AppError)
-	RegisterImportedUser(string) (*model.Login, *errs.AppError)
-	GetImportedUser(string) (*model.Login, *errs.AppError)
+	GetUserByUsername(string) (*model.User, *errs.AppError)
+	GetUserById(string) (*model.User, *errs.AppError)
+	// RegisterNativeUser takes a UUID, username, password, role, JWT Access and Refresh tokens and saves the user
+	// in the db, returning an error if unsuccessful
+	RegisterNativeUser(string, string, string, string, string) *errs.AppError
+	// RegisterNativeUser takes a username, role, JWT Access and Refresh tokens and saves the user
+	// in the db, returning an error if unsuccessful
+	RegisterImportedUser(string, string, string, string) *errs.AppError
+	UpdateRefreshToken(string, string) *errs.AppError
 }
 
-func (db UserRepositoryDb) GetUserByEmail(username string) (*model.User, *errs.AppError){
+func (db UserRepositoryDb) GetUserByUsername(username string) (*model.User, *errs.AppError){
 	var user model.User
-	sqlFind := "SELECT id, username, password, refresh_token FROM users WHERE username = ?"
+	sqlFind := "SELECT id, username, password, role, refresh_token FROM users WHERE username = ?"
 	err := db.client.Get(&user, sqlFind, username)
 	if err != nil{
 		if err == sql.ErrNoRows{
@@ -44,34 +43,49 @@ func (db UserRepositoryDb) GetUserByEmail(username string) (*model.User, *errs.A
 
 }
 
-func (db UserRepositoryDb) RegisterNativeUser(username string, password string) (*model.Login, *errs.AppError){
-
-	panic("Panic!!!")
-}
-
-func (db UserRepositoryDb) GetNativeUser(username string, password string) (*model.Login, *errs.AppError){
-	var login model.Login
-	sqlFind := "SELECT role, username, access_token, refresh_token FROM users WHERE username = ? AND password = ?"
-	passwordCheck, err := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
+func (db UserRepositoryDb) GetUserById(id string) (*model.User, *errs.AppError){
+	var user model.User
+	sqlFind := "SELECT id, username, password, role, refresh_token FROM users WHERE id = ?"
+	err := db.client.Get(&user, sqlFind, id)
 	if err != nil{
-		log.Println(err)
-	}
-	queryErr := db.client.Get(&login, sqlFind, username, string(passwordCheck))
-	if queryErr != nil {
-		if queryErr == sql.ErrNoRows{
-			return nil, errs.InvalidInputError("Invalid username or password")
-		}else {
-			return nil, errs.UnexpectedError("Unexpected database error")
+		if err == sql.ErrNoRows{
+			return nil, errs.UserNotFound()
+		}else{
+			return nil, errs.UnexpectedError(fmt.Sprintf("Error in function GetUserById: %s",err.Error()))
 		}
 	}
-	return &login, nil
+	return &user, nil
+
 }
 
-func (db UserRepositoryDb) RegisterImportedUser(username string, password string) (*model.Login, *errs.AppError){
+func (db UserRepositoryDb) RegisterNativeUser(uuid string, username string, password string, role string, refresh_token string) (*errs.AppError){
+	
+	sqlNewUser := "INSERT INTO users VALUES (?,?,?,?,?)"
+	_, execError := db.client.Exec(sqlNewUser, uuid, username, password, role, refresh_token)
+	if execError != nil{
+		return errs.UnexpectedError(execError.Error())
+	}
 
-	panic("panic!!!")
+	return nil
 }
 
-func (db UserRepositoryDb) GetImportedUser(username string){
-	panic("panic!!")
+
+func (db UserRepositoryDb) RegisterImportedUser(uuid string, username string, role string, refresh_token string)  *errs.AppError{
+
+	sqlNewUser := "INSERT INTO users VALUES (?,?,?,?)"
+	_, execError := db.client.Exec(sqlNewUser, uuid, username, role, refresh_token)
+	if execError != nil{
+		return errs.UnexpectedError(execError.Error())
+	}
+	return nil
+}
+
+
+func (db UserRepositoryDb) UpdateRefreshToken(uuid string, refreshToken string) *errs.AppError{
+	sqlRefresh := "UPDATE users SET refresh_token = ? WHERE id = ?"
+	_, refreshErr := db.client.Exec(sqlRefresh, refreshToken, uuid)
+	if refreshErr != nil{
+		return errs.UnexpectedError(refreshErr.Error())
+	}
+	return nil
 }
