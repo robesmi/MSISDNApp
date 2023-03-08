@@ -2,12 +2,11 @@ package web
 
 import (
 	"net/http"
-	"os"
 	"time"
-
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/robesmi/MSISDNApp/config"
 	"github.com/robesmi/MSISDNApp/repository"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/web/handlers"
@@ -41,14 +40,20 @@ func Start(){
 
 
 	//Starting up server
-	router.Run(":" + os.Getenv("APP_PORT"))
+	config, _ := config.LoadConfig()
+	router.Run(":" + config.Port)
 }
 
 // getStubDbClient initializes the db connection and returns it to Start
 // Using mysql as a placeholder until a solid solution is decided on
 func getStubDbClient() *sqlx.DB{
 
-	client, err := sqlx.Open("mysql","docker:password@tcp(godockerDB)/msisdn")
+	config, appErr := config.LoadConfig()
+	if appErr != nil{
+		panic(appErr)
+	}
+	//client, err := sqlx.Open("mysql","docker:password@tcp(godockerDB)/msisdn")
+	client, err := sqlx.Open(config.MySqlSource,config.MySqlSource)
 	if err != nil {
 		panic(err)
 	}
