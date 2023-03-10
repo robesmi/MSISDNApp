@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"github.com/robesmi/MSISDNApp/model/dto"
-	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/repository"
 )
 
@@ -16,7 +15,7 @@ func NewMSISDNService(repository repository.MSISDNRepository) DefaultMSISDNServi
 }
 
 type MSISDNService interface {
-	LookupMSISDN(string) (*dto.NumberLookupResponse, *errs.AppError)
+	LookupMSISDN(string) (*dto.NumberLookupResponse, error)
 }
 
 // LookupMSISDN takes a full MSISDN as a string and returns
@@ -24,7 +23,7 @@ type MSISDNService interface {
 // and the country identifier in ISO 3166-1-alpha-2 format
 // or an error otherwise
 //go:generate mockgen -destination=../mocks/service/mockMSISDNService.go -package=service github.com/robesmi/MSISDNApp/service MSISDNService
-func (s DefaultMSISDNService) LookupMSISDN(input string) (*dto.NumberLookupResponse, *errs.AppError){
+func (s DefaultMSISDNService) LookupMSISDN(input string) (*dto.NumberLookupResponse, error){
 	
 	countryResponse, err := s.repo.LookupCountryCode(input)
 	if err != nil {

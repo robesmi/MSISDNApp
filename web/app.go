@@ -19,8 +19,9 @@ func Start(){
 	router := gin.Default()
 	dbClient := getStubDbClient()
 	msrepo := repository.NewMSISDNRepository(dbClient)
+	aurepo := repository.NewAuthRepository(dbClient)
 	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo)}
-	ah := handlers.AuthHandler{}
+	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo)}
 
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
@@ -31,7 +32,12 @@ func Start(){
 	router.GET("/lookup", mh.GetLookupPage)
 	router.POST("/api/lookup", mh.NumberLookup)
 	
+	router.GET("/register", ah.GetRegisterPage)
 	router.GET("/login", ah.GetLoginPage)
+
+	router.POST("/register/native", ah.HandleNativeRegister)
+	router.POST("/login/native", ah.HandleNativeLogin)
+
 	router.GET("/oauth/google", ah.HandleGoogleLogin)
 	router.GET("/oauth/google/callback", ah.HandleGoogleCode)
 	router.GET("/oauth/github", ah.HandleGithubLogin)
@@ -53,7 +59,7 @@ func getStubDbClient() *sqlx.DB{
 		panic(appErr)
 	}
 	//client, err := sqlx.Open("mysql","docker:password@tcp(godockerDB)/msisdn")
-	client, err := sqlx.Open(config.MySqlSource,config.MySqlSource)
+	client, err := sqlx.Open(config.MySqlDriver,config.MySqlSource)
 	if err != nil {
 		panic(err)
 	}

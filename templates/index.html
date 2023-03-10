@@ -19,7 +19,7 @@
             $("#msisdn-input-submit").click( function(){
                 var number = $("#msisdn-input").val()
                 var data = { "number": number }
-                fetch("http://localhost:8080/lookup",{
+                fetch("http://localhost:8080/api/lookup",{
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

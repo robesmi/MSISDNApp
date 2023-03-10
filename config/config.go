@@ -23,7 +23,7 @@ type Config struct {
 	GithubClientSecret		string	`mapstructure:"GithubClientSecret"`
 }
 
-func LoadConfig() (Config, *errs.AppError){
+func LoadConfig() (Config, error){
 
 
 	_, b, _, _ := runtime.Caller(0)
@@ -39,12 +39,12 @@ func LoadConfig() (Config, *errs.AppError){
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Failed reading config " + err.Error())
-		return config, errs.UnexpectedError(err.Error())
+		return config, errs.NewUnexpectedError(err.Error())
 	}
 	err = viper.Unmarshal(&config)
 	if err != nil{
 		log.Fatalf("Failed unmarshaling config")
-		return config, errs.UnexpectedError(err.Error())
+		return config, errs.NewUnexpectedError(err.Error())
 	}
 	return config, nil
 

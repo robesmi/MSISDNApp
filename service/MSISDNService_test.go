@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -32,7 +33,7 @@ func TestNonExistantCountryNumber(t *testing.T) {
 
 	// Arrange
 	input := "6934567890"
-	expErr := errs.NumberNotFoundError("Number not found")
+	expErr := errs.NewNumberNotFoundError()
 
 	mockRepo.EXPECT().LookupCountryCode(input).Return(nil, expErr)
 
@@ -40,7 +41,7 @@ func TestNonExistantCountryNumber(t *testing.T) {
 	_, err := service.LookupMSISDN(input)
 
 	//Assert
-	if err.Code != expErr.Code{
+	if !errors.Is(err, expErr){
 		t.Error("Failed while testing non existant country number")
 	}
 
@@ -54,7 +55,7 @@ func TestNonExistantOperatorNumber(t *testing.T) {
 	// Arrange
 	input := "38942123456"
 	nextInput := "42123456"
-	expErr := errs.NoCarriersFound("Invalid operator number")
+	expErr := errs.NewNoCarriersFoundError()
 
 	expCountryResponse := dto.CountryLookupResponse{
 		CountryCode: "389",
@@ -71,7 +72,7 @@ func TestNonExistantOperatorNumber(t *testing.T) {
 	_, err := service.LookupMSISDN(input)
 
 	//Assert
-	if err.Code != expErr.Code{
+	if !errors.Is(err, expErr){
 		t.Error("Failed while testing non existant carrier number")
 	}
 }

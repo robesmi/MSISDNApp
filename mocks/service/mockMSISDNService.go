@@ -9,7 +9,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	dto "github.com/robesmi/MSISDNApp/model/dto"
-	errs "github.com/robesmi/MSISDNApp/model/errs"
 )
 
 // MockMSISDNService is a mock of MSISDNService interface.
@@ -36,11 +35,11 @@ func (m *MockMSISDNService) EXPECT() *MockMSISDNServiceMockRecorder {
 }
 
 // LookupMSISDN mocks base method.
-func (m *MockMSISDNService) LookupMSISDN(arg0 string) (*dto.NumberLookupResponse, *errs.AppError) {
+func (m *MockMSISDNService) LookupMSISDN(arg0 string) (*dto.NumberLookupResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupMSISDN", arg0)
 	ret0, _ := ret[0].(*dto.NumberLookupResponse)
-	ret1, _ := ret[1].(*errs.AppError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 

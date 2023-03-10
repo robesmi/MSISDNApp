@@ -48,7 +48,7 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 			// Execute service layer logic and receive a response
 			response, error := msh.Service.LookupMSISDN(number)
 			if error != nil{
-				writeResponse(c,error.Code, error.AsMessage())
+				writeResponse(c,http.StatusBadRequest, error.Error())
 				return
 			}
 			

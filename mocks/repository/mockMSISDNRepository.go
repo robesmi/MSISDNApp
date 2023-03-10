@@ -9,7 +9,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	dto "github.com/robesmi/MSISDNApp/model/dto"
-	errs "github.com/robesmi/MSISDNApp/model/errs"
 )
 
 // MockMSISDNRepository is a mock of MSISDNRepository interface.
@@ -36,11 +35,11 @@ func (m *MockMSISDNRepository) EXPECT() *MockMSISDNRepositoryMockRecorder {
 }
 
 // LookupCountryCode mocks base method.
-func (m *MockMSISDNRepository) LookupCountryCode(arg0 string) (*dto.CountryLookupResponse, *errs.AppError) {
+func (m *MockMSISDNRepository) LookupCountryCode(arg0 string) (*dto.CountryLookupResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupCountryCode", arg0)
 	ret0, _ := ret[0].(*dto.CountryLookupResponse)
-	ret1, _ := ret[1].(*errs.AppError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -51,11 +50,11 @@ func (mr *MockMSISDNRepositoryMockRecorder) LookupCountryCode(arg0 interface{}) 
 }
 
 // LookupMobileOperator mocks base method.
-func (m *MockMSISDNRepository) LookupMobileOperator(arg0, arg1 string) (*dto.MobileOperatorLookupResponse, *errs.AppError) {
+func (m *MockMSISDNRepository) LookupMobileOperator(arg0, arg1 string) (*dto.MobileOperatorLookupResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupMobileOperator", arg0, arg1)
 	ret0, _ := ret[0].(*dto.MobileOperatorLookupResponse)
-	ret1, _ := ret[1].(*errs.AppError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 

@@ -19,36 +19,36 @@ func NewMSISDNRepository(dbClient *sqlx.DB) MSISDNRepositoryDb{
 type MSISDNRepository interface{
 	// LookupCountryCode takes a string full number and returns the respective country identifier it belongs to,
 	// the country code and the country's prefix length, or an error
-	LookupCountryCode(string) (*dto.CountryLookupResponse, *errs.AppError)
+	LookupCountryCode(string) (*dto.CountryLookupResponse, error)
 	// LookupMobileOperator takes a country identifier and a significant number and returns an MNO, length of carrier prefix, or an error
-	LookupMobileOperator(string, string) (*dto.MobileOperatorLookupResponse, *errs.AppError)
+	LookupMobileOperator(string, string) (*dto.MobileOperatorLookupResponse, error)
 }
 
 
 //go:generate mockgen -destination=../mocks/repository/mockMSISDNRepository.go -package=repository github.com/robesmi/MSISDNApp/repository MSISDNRepository
-func (repo MSISDNRepositoryDb) LookupCountryCode(fullnumber string) (*dto.CountryLookupResponse,  *errs.AppError){
+func (repo MSISDNRepositoryDb) LookupCountryCode(fullnumber string) (*dto.CountryLookupResponse,  error){
 	var response dto.CountryLookupResponse
 	sqlQuery := "SELECT country_code, country_identifier, country_code_length FROM countries WHERE ? RLIKE country_number_format"
 	err := repo.db.Get(&response, sqlQuery, fullnumber)
 	if err != nil{
 		if err == sql.ErrNoRows{
-			return nil, errs.NumberNotFoundError("Country not found or invalid number entered")
+			return nil, errs.NewNumberNotFoundError()
 		}else{
-			return nil, errs.UnexpectedError("Unexpected database error")
+			return nil, errs.NewUnexpectedError(err.Error())
 		}
 	}
 	return &response,nil
 }
 
-func (repo MSISDNRepositoryDb) LookupMobileOperator(ci string, significantNumber string) (*dto.MobileOperatorLookupResponse, *errs.AppError){
+func (repo MSISDNRepositoryDb) LookupMobileOperator(ci string, significantNumber string) (*dto.MobileOperatorLookupResponse, error){
 	var response dto.MobileOperatorLookupResponse
 	sqlQuery := "SELECT mno, prefix_length FROM mobile_operators WHERE ? = country_identifier AND ? RLIKE prefix_format"
 	err := repo.db.Get(&response, sqlQuery, ci, significantNumber)
 	if err != nil{
 		if err == sql.ErrNoRows{
-			return nil, errs.NoCarriersFound("Carrier not found or invalid number entered")
+			return nil, errs.NewNoCarriersFoundError()
 		}else{
-			return nil, errs.UnexpectedError("Unexpected database error")
+			return nil, errs.NewUnexpectedError(err.Error())
 		}
 	}
 	return &response,nil

@@ -46,6 +46,7 @@ func TestNumberLookup(t *testing.T) {
 		TestErrorMessage string
 		ExpectedReturnCode int
 		CallsService bool
+		ExpectsError bool
 
 	}{
 		{
@@ -59,8 +60,9 @@ func TestNumberLookup(t *testing.T) {
 			Name: 				"Test Negative input",
 			Input:				"-212315231",
 			TestErrorMessage: 	"Failed while testing negative input value",
-			ExpectedReturnCode:	http.StatusInternalServerError,
+			ExpectedReturnCode:	http.StatusOK,
 			CallsService:		true,
+			ExpectsError:		false,
 		},
 		{
 			Name:				"Test Invalid Number",
@@ -90,6 +92,7 @@ func TestNumberLookup(t *testing.T) {
 			TestErrorMessage: 	"Failed while testing valid number",
 			ExpectedReturnCode:	http.StatusOK,
 			CallsService: 		true,
+			ExpectsError:		false,
 		},
 		{
 			Name:				"Valid number with whitespace",
@@ -97,6 +100,15 @@ func TestNumberLookup(t *testing.T) {
 			TestErrorMessage: 	"Failed while testing valid number with whitespace",
 			ExpectedReturnCode: http.StatusOK,
 			CallsService: 		true,
+			ExpectsError:		false,
+		},
+		{
+			Name:				"Nonexistant number",
+			Input: 				"123456789",
+			TestErrorMessage: 	"Failed while testing valid number with whitespace",
+			ExpectedReturnCode: http.StatusBadRequest,
+			CallsService: 		true,
+			ExpectsError:		true,
 		},
 	}
 
@@ -109,7 +121,11 @@ func TestNumberLookup(t *testing.T) {
 			defer teardown()
 
 			if test.CallsService{
-				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, &errs.AppError{ Code: test.ExpectedReturnCode})
+				if test.ExpectsError{
+					mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.NewUnexpectedError(""))
+				}else{
+				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, nil)
+				}
 			}
 			jsonReq := LookupRequest{
 				Number: test.Input,

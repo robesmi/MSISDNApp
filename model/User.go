@@ -1,9 +1,9 @@
 package model
 
 type User struct {
-	UUID string
-	Username string
-	Password string
-	Role string
-	RefreshToken string
+	UUID string			`db:"id"`
+	Username string		`db:"username"`
+	Password string		`db:"password"`
+	Role string			`db:"role"`
+	RefreshToken string	`db:"refresh_token"`
 }
