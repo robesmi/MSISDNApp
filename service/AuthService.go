@@ -26,6 +26,10 @@ type AuthService interface {
 	LoginNativeUser(string,string) (*dto.LoginResponse, error)
 	RegisterImportedUser(string) (*dto.LoginResponse, error)
 	LoginImportedUser(string) (*dto.LoginResponse, error)
+	// RefreshTokens takes a uuid and a refresh token, checking if the token matches the database one and returning
+	// a new pair of tokens if successful, or an error otherwise
+	RefreshTokens(string, string) (*dto.LoginResponse, error)
+	LogOutUser(string) (error)
 
 }
 
@@ -166,6 +170,31 @@ func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginRespons
 
 	return &response, nil
 }
+
+func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginResponse, error){
+	user, err := s.repository.GetUserById(id)
+	if err != nil{
+		return nil, err
+	}
+	if user.RefreshToken != token{
+		return nil, errs.NewRefreshTokenMismatch()
+	}
+	accessToken , atErr := utils.CreateAccessToken(user.Role)
+	if atErr != nil{
+		return nil, atErr
+	}
+	refreshToken, rtErr := utils.CreateRefreshToken(user.UUID)
+	if rtErr != nil {
+		return nil, rtErr
+	}
+
+	var response = dto.LoginResponse{
+		AccessToken: accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return &response, nil
+} 
 
 func (s DefaultAuthService) LogOutUser(id string) (error){
 	user, lookupErr := s.repository.GetUserById(id)

@@ -127,3 +127,16 @@ func NewNoCarriersFoundError() *NoCarriersFoundError{
 	}
 }
 
+type RefreshTokenMismatch struct{
+	Message string
+}
+
+func(u RefreshTokenMismatch) Error() string{
+	return u.Message
+}
+
+func NewRefreshTokenMismatch() *RefreshTokenMismatch{
+	return &RefreshTokenMismatch{
+		Message: "Please log in again",
+	}
+}

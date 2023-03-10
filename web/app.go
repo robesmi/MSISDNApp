@@ -3,10 +3,12 @@ package web
 import (
 	"net/http"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/config"
+	"github.com/robesmi/MSISDNApp/middleware"
 	"github.com/robesmi/MSISDNApp/repository"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/web/handlers"
@@ -27,13 +29,14 @@ func Start(){
 	router.LoadHTMLGlob("templates/*.html")
 	
 	router.GET("/", func(c *gin.Context){
-		c.Redirect(http.StatusMovedPermanently, "/lookup")
+		c.Redirect(http.StatusMovedPermanently, "/login")
 	})
-	router.GET("/lookup", mh.GetLookupPage)
-	router.POST("/api/lookup", mh.NumberLookup)
+	
 	
 	router.GET("/register", ah.GetRegisterPage)
 	router.GET("/login", ah.GetLoginPage)
+	router.GET("/refresh", ah.RefreshAccessToken)
+	router.GET("logout", ah.LogOut)
 
 	router.POST("/register/native", ah.HandleNativeRegister)
 	router.POST("/login/native", ah.HandleNativeLogin)
@@ -42,6 +45,19 @@ func Start(){
 	router.GET("/oauth/google/callback", ah.HandleGoogleCode)
 	router.GET("/oauth/github", ah.HandleGithubLogin)
 	router.GET("/oauth/github/callback", ah.HandleGithubCode)
+
+
+	authorized := router.Group("/service")
+	authorized.Use(middleware.ValidateTokenUserSection())
+	{
+		authorized.GET("/lookup", mh.GetLookupPage)
+		authorized.POST("/api/lookup", mh.NumberLookup)
+	}
+	
+
+	
+
+
 	
 
 

@@ -64,16 +64,16 @@ func CreateRefreshToken(userid string) (string, error) {
 	return token, nil
 }
 
-func ValidateToken(token string) error{
+func ValidateToken(token string) (jwt.MapClaims,error){
 	config, _ := config.LoadConfig()
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.AccessTokenPublicKey)
 	if err != nil {
-		return errs.NewUnexpectedError(err.Error())
+		return nil,errs.NewUnexpectedError(err.Error())
 	}
 
 	key,err :=  jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
 	if err != nil {
-		return errs.NewUnexpectedError(err.Error())
+		return nil, errs.NewUnexpectedError(err.Error())
 	}
 
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token)(interface{}, error){
@@ -85,25 +85,21 @@ func ValidateToken(token string) error{
 	})
 
 	if err != nil{
-		return errs.NewUnexpectedError(err.Error())
+		return nil, errs.NewUnexpectedError(err.Error())
 	}
 	
-	if parsedToken.Valid{
-		return nil
+	if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && parsedToken.Valid{
+		return claims, nil
 	}else if ve, ok := err.(*jwt.ValidationError); ok{
 		if ve.Errors&jwt.ValidationErrorMalformed != 0{
-			return errs.NewMalformedTokenError()
+			return nil, errs.NewMalformedTokenError()
 		}else if ve.Errors&jwt.ValidationErrorExpired!= 0{
-			return errs.NewExpiredTokenError()
+			return nil, errs.NewExpiredTokenError()
 		}else {
-			return errs.NewUnexpectedError(ve.Error())
+			return nil, errs.NewUnexpectedError(ve.Error())
 		}
 	}else{
-		return errs.NewUnexpectedError(ve.Error())
+		return nil, errs.NewUnexpectedError(ve.Error())
 	}
 	
-}
-
-func RefreshAccessToken(token string) (string, error){
-	panic("panic!!!")
 }
