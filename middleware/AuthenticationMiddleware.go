@@ -41,7 +41,7 @@ func ValidateTokenUserSection() gin.HandlerFunc{
 				var refresh_token string
 				refresh_token,err = c.Cookie("refresh_token")
 				if err != nil{
-					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "How do you not have a cookie"})
+					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "Access cookie with no refresh cookie case"})
 				}
 				_, valErr := utils.ValidateToken(refresh_token)
 				if valErr != nil{
@@ -56,12 +56,12 @@ func ValidateTokenUserSection() gin.HandlerFunc{
 			}
 		}
 		
-		// After that we gotta check if the token has the permissions for the route smh...
+		// Check if token contains appropriate role
 		role := claims["role"]
 		if role == "user"{
 			c.Next()
 		}else{
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "status":"fail", "message": "Unauthoirized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "status":"fail", "message": "Unauthorized"})
 		}
 		
 	}
@@ -98,7 +98,7 @@ func ValidateTokenAdminSection() gin.HandlerFunc{
 				var refresh_token string
 				refresh_token,err = c.Cookie("refresh_token")
 				if err != nil{
-					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "How do you not have a cookie"})
+					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "Access cookie with no refresh cookie case"})
 				}
 				_, valErr := utils.ValidateToken(refresh_token)
 				if valErr != nil{
@@ -113,12 +113,12 @@ func ValidateTokenAdminSection() gin.HandlerFunc{
 			}
 		}
 		
-		// After that we gotta check if the token has the permissions for the route smh...
+		// Check if token has appropriate role
 		role := claims["role"]
 		if role == "user"{
 			c.Next()
 		}else{
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "status":"fail", "message": "Unauthoirized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "status":"fail", "message": "Unauthorized"})
 		}
 		
 	}

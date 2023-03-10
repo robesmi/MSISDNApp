@@ -188,6 +188,10 @@ func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginRes
 		return nil, rtErr
 	}
 
+	if refErr := s.repository.UpdateRefreshToken(id, refreshToken); refErr != nil{
+		return nil,err
+	}
+
 	var response = dto.LoginResponse{
 		AccessToken: accessToken,
 		RefreshToken: refreshToken,
