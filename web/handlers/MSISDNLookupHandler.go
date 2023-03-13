@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/robesmi/MSISDNApp/service"
 )
@@ -48,7 +47,7 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 			// Execute service layer logic and receive a response
 			response, error := msh.Service.LookupMSISDN(number)
 			if error != nil{
-				writeResponse(c,http.StatusBadRequest, error.Error())
+				writeResponse(c,http.StatusBadRequest, map[string]string{ "error": error.Error()})
 				return
 			}
 			

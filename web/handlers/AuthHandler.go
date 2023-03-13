@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -195,53 +197,59 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 	})
 }
 
-
-// HandleGoogleLogin redirects user to the google oauth2 authorization page
-func (a AuthHandler) HandleGoogleLogin(c *gin.Context){
-	state := randToken()
-	session := sessions.Default(c)
-	session.Set("state",state)
-	session.Save()
-
-	url := googleConfig.AuthCodeURL(state)
-	c.Redirect(http.StatusTemporaryRedirect,url)
-}
-// HandleGoogleCode receives the access code from google's redirect and makes a post request
-// to receive the appropriate access token and refresh token, used to obtain a username
-// to register in the database
+// HandleGoogleCode receives the ID token from google's redirect and registers/logs in
+// the user and returns the appropriate tokens
 func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 
-	session := sessions.Default(c)
-	responseState := session.Get("state")
-	if responseState != c.Query("state"){
-		c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("invalid session state %s",responseState))
+	// Get the data from google's response
+	respData,readErr := io.ReadAll(c.Request.Body)
+	if readErr != nil{
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	token, err := googleConfig.Exchange(context.Background(), c.Query("code"))
-	if err != nil {
-		c.AbortWithError(http.StatusBadRequest,err)
-		return
-	}
-	client := googleConfig.Client(context.Background(),token)
 
-	resp,err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
-	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
+	// Get the relevant fields from the response
+	config, _ := config.LoadConfig()
+	idTokenFields := strings.Split(string(respData), "&")
+	clientId, idJWT ,csrfToken := strings.Split(idTokenFields[1],"=")[1], strings.Split(idTokenFields[2],"=")[1], strings.Split(idTokenFields[4],"=")[1]
+	csrfCookie,err := c.Request.Cookie("g_csrf_token")
+
+	// Verify the fields
+	if err != nil{
+		log.Println("Error getting csrf protection cookie" + err.Error())
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
-	defer resp.Body.Close()
-	username, errr := io.ReadAll(resp.Body)
-	if errr != nil {
-		c.AbortWithError(http.StatusInternalServerError, errr)
+	if csrfToken != csrfCookie.Value{
+		log.Println("CSRF protection cookie and token do not match ")
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
-	login, appErr := a.Service.RegisterImportedUser(string(username))
-	if appErr == err.(*errs.UserAlreadyExists){
+	if config.GoogleClientID != clientId{
+		log.Println("ID Token client id does not match")
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	// Extract the email from the ID token claims and use it to register/login the user
+	tokenClaims, valErr := utils.ValidateGoogleIdToken(idJWT)
+	if valErr != nil{
+		log.Println(valErr.Error())
+	}
+
+	if fmt.Sprint(tokenClaims["iss"]) != "https://accounts.google.com"{
+		log.Println("Unauthorized google id token issuer, received: " + fmt.Sprint((tokenClaims["iss"])))
+	}
+	login, appErr := a.Service.RegisterImportedUser(fmt.Sprint(tokenClaims["email"]))
+	if _,ok := appErr.(*errs.UserAlreadyExists); ok{
 		var newErr error
-		login, newErr = a.Service.LoginImportedUser(string(username))
+		login, newErr = a.Service.LoginImportedUser(fmt.Sprint(tokenClaims["email"]))
 		if newErr != nil{
 			c.Abort()
+			return
 		}
+	}else if appErr != nil {
+		log.Println("Error with registering/logging a google user" + appErr.Error())
+		return
 	}
+
 
 	c.SetCookie("access_token", login.AccessToken, int(time.Minute * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", login.RefreshToken, int(time.Hour * 24),"/","localhost",false,true)
@@ -251,6 +259,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 		"access_token" : login.AccessToken,
 		"refresh_token" : login.RefreshToken,
 	})
+	
 }
 
 
@@ -291,7 +300,7 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 		c.AbortWithError(http.StatusInternalServerError, errr)
 	}
 	login, appErr := a.Service.RegisterImportedUser(string(username))
-	if appErr == err.(*errs.UserAlreadyExists){
+	if _,ok := appErr.(*errs.UserAlreadyExists); ok{
 		var newErr error
 		login, newErr = a.Service.LoginImportedUser(string(username))
 		if newErr != nil{

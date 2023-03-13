@@ -42,6 +42,8 @@ func (db UserRepositoryDb) GetUserByUsername(username string) (*model.User, erro
 
 }
 
+
+
 func (db UserRepositoryDb) GetUserById(id string) (*model.User, error){
 	var user model.User
 	sqlFind := "SELECT id, username, password, role, refresh_token FROM users WHERE id = ?"
@@ -71,8 +73,8 @@ func (db UserRepositoryDb) RegisterNativeUser(uuid string, username string, pass
 
 func (db UserRepositoryDb) RegisterImportedUser(uuid string, username string, role string, refresh_token string)  error{
 
-	sqlNewUser := "INSERT INTO users VALUES (?,?,?,?)"
-	_, execError := db.client.Exec(sqlNewUser, uuid, username, role, refresh_token)
+	sqlNewUser := "INSERT INTO users VALUES (?,?, ?,?,?)"
+	_, execError := db.client.Exec(sqlNewUser, uuid, username,"", role, refresh_token)
 	if execError != nil{
 		return errs.NewUnexpectedError(execError.Error())
 	}

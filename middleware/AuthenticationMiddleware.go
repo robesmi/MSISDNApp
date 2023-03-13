@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/utils"
 )
@@ -32,7 +32,7 @@ func ValidateTokenUserSection(c *gin.Context){
 			// Check whether the token is valid
 			var claims jwt.MapClaims
 			var err error
-			claims,err = utils.ValidateAccessToken(access_token)
+			claims, err = utils.ValidateAccessToken(access_token)
 			if err != nil{
 				if _,ok := err.(*errs.ExpiredTokenError); ok{
 					//Do token refresh logic here
@@ -96,7 +96,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 		var err error
 		claims,err = utils.ValidateAccessToken(access_token)
 		if err != nil{
-			if err == err.(errs.ExpiredTokenError){
+			if _,ok := err.(errs.ExpiredTokenError);ok{
 				//Do token refresh logic here
 				var refresh_token string
 				refresh_token,err = c.Cookie("refresh_token")

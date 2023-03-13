@@ -20,6 +20,7 @@ type Config struct {
 	GoogleClientID			string	`mapstructure:"GoogleClientID"`
 	GoogleClientSecret		string	`mapstructure:"GoogleClientSecret"`
 	GoogleRedirect			string	`mapstructure:"GoogleRedirect"`
+	GoogleJwkUrl			string	`mapstructure:"GoogleJwkUrl"`
 	GithubClientID			string	`mapstructure:"GithubClientID"`
 	GithubClientSecret		string	`mapstructure:"GithubClientSecret"`
 	GithubRedirect			string	`mapstructure:"GithubRedirect"`

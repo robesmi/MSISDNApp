@@ -108,33 +108,33 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResponse, error){
 	
 	_ , err := s.repository.GetUserByUsername(username)
-	if err != nil {
+	if _, ok := err.(*errs.UserNotFoundError); ok {
+		//Creates new id, encrypted password and tokens and registers to db
+		newID := uuid.NewString()
+		
+		accessToken , atErr := utils.CreateAccessToken("user")
+		if atErr != nil{
+			return nil, atErr
+		}
+		refreshToken, rtErr := utils.CreateRefreshToken(newID)
+		if rtErr != nil {
+			return nil, rtErr
+		}
+		errr := s.repository.RegisterImportedUser(newID, username, "user",refreshToken)
+		if errr != nil {
+			return nil, errr
+		}
+
+		// If successful, returns the login response
+		var response = dto.LoginResponse{
+			AccessToken: accessToken,
+			RefreshToken: refreshToken,
+		}
+
+		return &response, nil
+	}else{
 		return nil, errs.NewUserAlreadyExistsError()
 	}
-
-	//Creates new id, encrypted password and tokens and registers to db
-	newID := uuid.NewString()
-	
-	accessToken , atErr := utils.CreateAccessToken("user")
-	if atErr != nil{
-		return nil, atErr
-	}
-	refreshToken, rtErr := utils.CreateRefreshToken(newID)
-	if rtErr != nil {
-		return nil, rtErr
-	}
-	errr := s.repository.RegisterImportedUser(newID, username, "user",refreshToken)
-	if errr != nil {
-		return nil, errr
-	}
-
-	// If successful, returns the login response
-	var response = dto.LoginResponse{
-		AccessToken: accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return &response, nil
 }
 
 func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginResponse, error){

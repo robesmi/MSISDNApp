@@ -35,20 +35,29 @@ func Start(){
 	
 	router.GET("/register", ah.GetRegisterPage)
 	router.POST("/register", ah.HandleNativeRegister)
-	
+
 	router.GET("/login", ah.GetLoginPage)
-	router.POST("/login/", ah.HandleNativeLogin)
+	router.POST("/login", ah.HandleNativeLogin)
 
 	router.GET("/refresh", ah.RefreshAccessToken)
+	router.POST("/refresh", func(c *gin.Context){
+		c.Redirect(http.StatusTemporaryRedirect, "/refresh")
+	})
+
 	router.GET("/logout", ah.LogOut)
+	router.POST("/logout", func(c *gin.Context){
+		c.Redirect(http.StatusTemporaryRedirect, "/logout")
+	})
 
-	
+	router.POST("/oauth/google/callback", ah.HandleGoogleCode)
+	router.GET("/oauth/google/callback", func(c *gin.Context){
+		c.Redirect(http.StatusTemporaryRedirect,"/login")
+	})
 
-	router.GET("/oauth/google", ah.HandleGoogleLogin)
-	router.GET("/oauth/google/callback", ah.HandleGoogleCode)
-	router.GET("/oauth/github", ah.HandleGithubLogin)
-	router.GET("/oauth/github/callback", ah.HandleGithubCode)
-
+	router.POST("/oauth/github/callback", ah.HandleGithubCode)
+	router.GET("/oauth/github/callback", func(c *gin.Context){
+		c.Redirect(http.StatusTemporaryRedirect,"/login")
+	})
 
 	authorized := router.Group("/service")
 	authorized.Use(middleware.ValidateTokenUserSection)

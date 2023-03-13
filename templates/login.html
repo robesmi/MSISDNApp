@@ -1,11 +1,27 @@
 <html>
 
 <head>
-
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
-
+    <body>
+        <div id="g_id_onload"
+        data-client_id="349276418071-7966f85b6ptl12jlc3sqib6k47p3j6b2.apps.googleusercontent.com"
+        data-context="signin"
+        data-ux_mode="redirect"
+        data-login_uri="http://localhost:8080/oauth/google/callback"
+        data-auto_prompt="false">
+   </div>
+   
+   <div class="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="outline"
+        data-text="signin_with"
+        data-size="medium"
+        data-logo_alignment="left">
+   </div>
     <form action="/login" method="POST">
         {{ if .prevUsername }}
         <label>Email</label>
@@ -22,6 +38,9 @@
         <input type="text" name="password">
         {{ end }}
         <input type="submit" value="Login">
+    </form>
+    <form action="/logout" method="GET">
+        <input type="submit" value="Log out">
     </form>
     <div> {{ .error }}</div>
 </body>
