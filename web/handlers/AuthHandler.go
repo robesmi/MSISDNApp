@@ -31,19 +31,14 @@ type LoginForm struct {
 }
 
 //Configuring credentials for OAuth websites that will be implemented
-var googleRedirect = "http://127.0.0.1/8080/oauth/google/callback"
-var githubRedirect = "http://127.0.0.1/8080/oauth/github/callback"
-
 var googleConfig = &oauth2.Config{
 	Endpoint: google.Endpoint,
-	RedirectURL: googleRedirect,
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
 	},
 }
 var githubConfig = &oauth2.Config{
 	Endpoint: github.Endpoint,
-	RedirectURL: githubRedirect,
 	Scopes: []string{
 		"user:email",
 	},
@@ -56,9 +51,11 @@ func init(){
 
 	googleConfig.ClientID = config.GoogleClientID
 	googleConfig.ClientSecret = config.GoogleClientSecret
+	googleConfig.RedirectURL = config.GoogleRedirect
 
 	githubConfig.ClientID = config.GithubClientID
 	githubConfig.ClientSecret = config.GithubClientSecret
+	githubConfig.RedirectURL = config.GithubRedirect
 
 }
 
@@ -71,7 +68,7 @@ func(a AuthHandler) GetRegisterPage(c *gin.Context){
 // GetLoginPage returns the login page that will be used for presenting the
 // available authentication methods
 func (a AuthHandler)GetLoginPage(c *gin.Context){
-	c.HTML(http.StatusOK, "index.html", nil)
+	c.HTML(http.StatusOK, "login.html", nil)
 }
 
 // HandleNativeRegister gets a username/password combination from a form, performs needed validation and creates
@@ -90,12 +87,13 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 			"prevUsername": login.Username,
 			"prevPassword": login.Password,
 		})
+		return
 	}
 
 	// Using a negative password regex because golang regex does not support lookahead
 	// At least 8 characters, must contain one uppercase character, 1 lowercase and 1 number
 	passwordRegex := regexp.MustCompile(`^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$`)
-	if passwordRegex.MatchString(login.Password){
+		if passwordRegex.MatchString(login.Password){
 		c.HTML(http.StatusBadRequest, "register.html", gin.H{
 			"error": "Password must have at least 8 characters, contain at least 1 uppercase letter, 1 lower case letter and a number.",
 			"prevUsername": login.Username,
@@ -106,23 +104,16 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 
 	loginResp, err := a.Service.RegisterNativeUser(login.Username, login.Password)
 	if err != nil{
-		if _,ok := err.(*errs.UserNotFoundError); ok{
+		if _,ok := err.(*errs.UserAlreadyExists); ok{
 			c.HTML(http.StatusBadRequest, "register.html", gin.H{
 				"error": "Email already in use",
 				"prevUsername": login.Username,
 				"prevPassword": login.Password,
 			})
 			return
-		}else if _,ok := err.(*errs.UserAlreadyExists); ok{
-			c.HTML(http.StatusBadRequest, "register.html", gin.H{
-				"error": "User already exists",
-				"prevUsername": login.Username,
-				"prevPassword": login.Password,
-			})
-			return
 		}else{
 			c.HTML(http.StatusInternalServerError, "register.html", gin.H{
-				"error": "Internal error " + err.Error(),
+				"error": "Internal error, please try again",
 				"prevUsername": login.Username,
 				"prevPassword": login.Password,
 			})
@@ -154,6 +145,7 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 			"prevUsername": login.Username,
 			"prevPassword": login.Password,
 		})
+		return
 	}
 
 	passwordRegex := regexp.MustCompile(`^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$`)
@@ -163,27 +155,38 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 			"prevUsername": login.Username,
 			"prevPassword": login.Password,
 		})
+		return
 	}
 
 	loginResp, err := a.Service.LoginNativeUser(login.Username, login.Password)
 	if err != nil{
-		if err == err.(*errs.UserAlreadyExists){
+		if _,ok := err.(*errs.UserAlreadyExists); ok{
 			c.HTML(http.StatusBadRequest, "login.html", gin.H{
 				"error": "Email already in use",
 				"prevUsername": login.Username,
 				"prevPassword": login.Password,
 			})
+			return
+		}
+		if _,ok := err.(*errs.InvalidCredentials); ok{
+			c.HTML(http.StatusBadRequest, "login.html", gin.H{
+				"error": "Email or password is incorrect",
+				"prevUsername": login.Username,
+				"prevPassword": login.Password,
+			})
+			return
 		}else{
 			c.HTML(http.StatusBadRequest, "login.html", gin.H{
 				"error": "Internal error " + err.Error(),
 				"prevUsername": login.Username,
 				"prevPassword": login.Password,
 			})
+			return
 		}
 	}
 
-	c.SetCookie("access_token", loginResp.AccessToken, int(time.Minute * 15),"/","localhost",false,true)
-	c.SetCookie("refresh_token", loginResp.RefreshToken, int(time.Hour * 24),"/","localhost",false,true)
+	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
@@ -311,10 +314,10 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 	refToken, err := c.Cookie("refresh_token")
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"status": "fail", "message": "Could not refresh token"})
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	refClaims, valErr := utils.ValidateToken(refToken)
+	refClaims, valErr := utils.ValidateRefreshToken(refToken)
 	if valErr != nil{
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
@@ -336,7 +339,7 @@ func (a AuthHandler) LogOut(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	refClaims, valErr := utils.ValidateToken(refToken)
+	refClaims, valErr := utils.ValidateRefreshToken(refToken)
 	if valErr != nil{
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)

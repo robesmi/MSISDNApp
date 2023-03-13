@@ -1,0 +1,29 @@
+<html>
+
+<head>
+
+</head>
+
+<body>
+
+    <form action="/login" method="POST">
+        {{ if .prevUsername }}
+        <label>Email</label>
+        <input type="text" placeholder="{{ .prevUsername }}" name="username">
+        {{ else }}
+        <label>Email</label>
+        <input type="text" name="username">
+        {{ end }}
+        {{ if .prevPassword }}
+        <label>Password</label>
+        <input type="text" placeholder="{{ .prevPassword }}" name="password">
+        {{ else }}
+        <label>Password</label>
+        <input type="text" name="password">
+        {{ end }}
+        <input type="submit" value="Login">
+    </form>
+    <div> {{ .error }}</div>
+</body>
+
+</html>

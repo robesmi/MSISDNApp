@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/robesmi/MSISDNApp/model/dto"
@@ -79,11 +78,7 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 	if lookupErr != nil {
 		return nil, nil
 	}
-	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
-	if err != nil{
-		log.Println(err)
-	}
-	isPasswordInvalid := bcrypt.CompareHashAndPassword(encryptedPassword,[]byte(user.Password))
+	isPasswordInvalid := bcrypt.CompareHashAndPassword([]byte(user.Password),[]byte(password))
 	if isPasswordInvalid != nil{
 		return nil, errs.NewInvalidCredentialsError()
 	}

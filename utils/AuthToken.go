@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -42,7 +43,7 @@ func CreateAccessToken(role string) (string, error){
 func CreateRefreshToken(userid string) (string, error) {
 
 	claims := make(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["exp"] = time.Now().Add(time.Hour * 12).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["nbf"] = time.Now().Unix()
 	claims["id"] = userid
@@ -64,7 +65,7 @@ func CreateRefreshToken(userid string) (string, error) {
 	return token, nil
 }
 
-func ValidateToken(token string) (jwt.MapClaims,error){
+func ValidateAccessToken(token string) (jwt.MapClaims,error){
 	config, _ := config.LoadConfig()
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.AccessTokenPublicKey)
 	if err != nil {
@@ -77,7 +78,6 @@ func ValidateToken(token string) (jwt.MapClaims,error){
 	}
 
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token)(interface{}, error){
-
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok{
 			return nil, fmt.Errorf("unexpected method: %s", t.Header["alg"])
 		}
@@ -85,6 +85,47 @@ func ValidateToken(token string) (jwt.MapClaims,error){
 	})
 
 	if err != nil{
+		log.Println(err.Error())
+		return nil, errs.NewUnexpectedError(err.Error())
+	}
+	
+	if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && parsedToken.Valid{
+		return claims, nil
+	}else if ve, ok := err.(*jwt.ValidationError); ok{
+		if ve.Errors&jwt.ValidationErrorMalformed != 0{
+			return nil, errs.NewMalformedTokenError()
+		}else if ve.Errors&jwt.ValidationErrorExpired!= 0{
+			return nil, errs.NewExpiredTokenError()
+		}else {
+			return nil, errs.NewUnexpectedError(ve.Error())
+		}
+	}else{
+		return nil, errs.NewUnexpectedError(ve.Error())
+	}
+	
+}
+
+func ValidateRefreshToken(token string) (jwt.MapClaims,error){
+	config, _ := config.LoadConfig()
+	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.RefreshTokenPublicKey)
+	if err != nil {
+		return nil,errs.NewUnexpectedError(err.Error())
+	}
+
+	key,err :=  jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
+	if err != nil {
+		return nil, errs.NewUnexpectedError(err.Error())
+	}
+
+	parsedToken, err := jwt.Parse(token, func(t *jwt.Token)(interface{}, error){
+		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok{
+			return nil, fmt.Errorf("unexpected method: %s", t.Header["alg"])
+		}
+		return key, nil
+	})
+
+	if err != nil{
+		log.Println(err.Error())
 		return nil, errs.NewUnexpectedError(err.Error())
 	}
 	

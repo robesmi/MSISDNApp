@@ -19,8 +19,10 @@ type Config struct {
 	RefreshTokenPublicKey  	string	`mapstructure:"RefreshTokenPublicKey"`
 	GoogleClientID			string	`mapstructure:"GoogleClientID"`
 	GoogleClientSecret		string	`mapstructure:"GoogleClientSecret"`
+	GoogleRedirect			string	`mapstructure:"GoogleRedirect"`
 	GithubClientID			string	`mapstructure:"GithubClientID"`
 	GithubClientSecret		string	`mapstructure:"GithubClientSecret"`
+	GithubRedirect			string	`mapstructure:"GithubRedirect"`
 }
 
 func LoadConfig() (Config, error){

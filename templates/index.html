@@ -14,15 +14,17 @@
     src="https://code.jquery.com/jquery-3.6.3.js"
     integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
     crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie/dist/js.cookie.min.js"></script>
     <script>
         $( document ).ready(function(){
             $("#msisdn-input-submit").click( function(){
                 var number = $("#msisdn-input").val()
                 var data = { "number": number }
-                fetch("http://localhost:8080/api/lookup",{
+                fetch("http://localhost:8080/service/api/lookup",{
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer" + Cookies.get("access_token"),
                     },
                     body: JSON.stringify(data)
                 })

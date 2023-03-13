@@ -34,12 +34,15 @@ func Start(){
 	
 	
 	router.GET("/register", ah.GetRegisterPage)
+	router.POST("/register", ah.HandleNativeRegister)
+	
 	router.GET("/login", ah.GetLoginPage)
-	router.GET("/refresh", ah.RefreshAccessToken)
-	router.GET("logout", ah.LogOut)
+	router.POST("/login/", ah.HandleNativeLogin)
 
-	router.POST("/register/native", ah.HandleNativeRegister)
-	router.POST("/login/native", ah.HandleNativeLogin)
+	router.GET("/refresh", ah.RefreshAccessToken)
+	router.GET("/logout", ah.LogOut)
+
+	
 
 	router.GET("/oauth/google", ah.HandleGoogleLogin)
 	router.GET("/oauth/google/callback", ah.HandleGoogleCode)
@@ -48,18 +51,17 @@ func Start(){
 
 
 	authorized := router.Group("/service")
-	authorized.Use(middleware.ValidateTokenUserSection())
+	authorized.Use(middleware.ValidateTokenUserSection)
 	{
 		authorized.GET("/lookup", mh.GetLookupPage)
 		authorized.POST("/api/lookup", mh.NumberLookup)
 	}
-	
 
-	
-
-
-	
-
+	adminGroup := router.Group("/admin")
+	adminGroup.Use(middleware.ValidateTokenAdminSection)
+	{
+		
+	}
 
 	//Starting up server
 	config, _ := config.LoadConfig()
@@ -74,7 +76,7 @@ func getStubDbClient() *sqlx.DB{
 	if appErr != nil{
 		panic(appErr)
 	}
-	//client, err := sqlx.Open("mysql","docker:password@tcp(godockerDB)/msisdn")
+
 	client, err := sqlx.Open(config.MySqlDriver,config.MySqlSource)
 	if err != nil {
 		panic(err)
