@@ -1,6 +1,42 @@
 <html>
-    <head></head>
+    <head>
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    </head>
     <body>
-        {{ .error }}
+        <div id="g_id_onload"
+        data-client_id="349276418071-7966f85b6ptl12jlc3sqib6k47p3j6b2.apps.googleusercontent.com"
+        data-context="signin"
+        data-ux_mode="redirect"
+        data-login_uri="http://localhost:8080/oauth/google/callback"
+        data-auto_prompt="false">
+   </div>
+   
+   <div class="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="outline"
+        data-text="signin_with"
+        data-size="medium"
+        data-logo_alignment="left">
+   </div>
+
+   <form action="/register" method="POST">
+        {{ if .prevUsername }}
+        <label>Email</label>
+        <input type="text" placeholder="{{ .prevUsername }}" name="username">
+        {{ else }}
+        <label>Email</label>
+        <input type="text" name="username">
+        {{ end }}
+        {{ if .prevPassword }}
+        <label>Password</label>
+        <input type="text" placeholder="{{ .prevPassword }}" name="password">
+        {{ else }}
+        <label>Password</label>
+        <input type="text" name="password">
+        {{ end }}
+        <input type="submit" value="Login">
+    </form>
     </body>
 </html>
