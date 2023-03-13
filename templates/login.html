@@ -22,6 +22,11 @@
         data-size="medium"
         data-logo_alignment="left">
    </div>
+
+   <form action="/oauth/github" method="GET">
+    <input type="submit" value="Sign in with Github">
+   </form>
+   
     <form action="/login" method="POST">
         {{ if .prevUsername }}
         <label>Email</label>

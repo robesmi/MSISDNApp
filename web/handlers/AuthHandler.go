@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -30,6 +31,13 @@ type AuthHandler struct {
 type LoginForm struct {
 	Username string `form:"username"`
 	Password string `form:"password"`
+}
+
+type GithubEmail struct{
+	Email string		`json:"email"`
+	Primary bool		`json:"primary"`
+	Verified bool		`json:"verified"`
+	Visibility string	`json:"visibility"`
 }
 
 //Configuring credentials for OAuth websites that will be implemented
@@ -250,9 +258,8 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 		return
 	}
 
-
-	c.SetCookie("access_token", login.AccessToken, int(time.Minute * 15),"/","localhost",false,true)
-	c.SetCookie("refresh_token", login.RefreshToken, int(time.Hour * 24),"/","localhost",false,true)
+	c.SetCookie("access_token", login.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("refresh_token", login.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
@@ -263,32 +270,38 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 }
 
 
-// HandleGithubLogin redirects user to the github oauth2 authorization page
+// HandleGithubLogin redirects user to the github oauth2 authorization page with a state and the required parameters
 func (a AuthHandler) HandleGithubLogin(c *gin.Context){
+	//Set a random state parameter
 	state := randToken()
 	session := sessions.Default(c)
 	session.Set("state",state)
 	session.Save()
-	
-	url := githubConfig.AuthCodeURL(state)
+	// Redirect user to github's consent page with the appropriate parameters
+	url := githubConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("client_id", githubConfig.ClientID), oauth2.SetAuthURLParam("redirect_uri",githubConfig.RedirectURL), oauth2.SetAuthURLParam("scope", githubConfig.Scopes[0]))
 	c.Redirect(http.StatusTemporaryRedirect,url)
 }
 // HandleGithubCode receives the access code from google's redirect and makes a post request
 // to receive the appropriate access token and refresh token
 func (a AuthHandler) HandleGithubCode(c *gin.Context){
+
+	// Check whether the states match
 	session := sessions.Default(c)
 	responseState := session.Get("state")
 	if responseState != c.Query("state"){
 		c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("invalid session state %s",responseState))
 		return
 	}
-	token, err := googleConfig.Exchange(context.Background(), c.Query("code"))
+
+	//Exchange the received code for an access token to github
+	token, err := githubConfig.Exchange(context.Background(), c.Query("code"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest,err)
 		return
 	}
-	client := googleConfig.Client(context.Background(),token)
+	client := githubConfig.Client(context.Background(),token)
 
+	// Use token to get the email needed for registering user
 	resp,err := client.Get("https://api.github.com/user/emails")
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -297,19 +310,35 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 	defer resp.Body.Close()
 	username, errr := io.ReadAll(resp.Body)
 	if errr != nil {
-		c.AbortWithError(http.StatusInternalServerError, errr)
+		c.Redirect(http.StatusTemporaryRedirect, "/register")
+		return
 	}
-	login, appErr := a.Service.RegisterImportedUser(string(username))
-	if _,ok := appErr.(*errs.UserAlreadyExists); ok{
-		var newErr error
-		login, newErr = a.Service.LoginImportedUser(string(username))
-		if newErr != nil{
-			c.Abort()
+	var userEmails []GithubEmail
+	json.Unmarshal(username,&userEmails)
+
+	var primaryEmail string
+	for k := range userEmails {		
+		if userEmails[k].Primary{
+			primaryEmail = userEmails[k].Email
 		}
 	}
+	
+	login, appErr := a.Service.RegisterImportedUser(primaryEmail)
+	if _,ok := appErr.(*errs.UserAlreadyExists); ok{
+		var newErr error
+		login, newErr = a.Service.LoginImportedUser(primaryEmail)
+		if newErr != nil{
+			log.Println("Error " + newErr.Error())
+			return
+		}
+	}else if appErr != nil{
+		log.Println("Error with github authentication")
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		return
+	}
 
-	c.SetCookie("access_token", login.AccessToken, int(time.Minute * 15),"/","localhost",false,true)
-	c.SetCookie("refresh_token", login.RefreshToken, int(time.Hour * 24),"/","localhost",false,true)
+	c.SetCookie("access_token", login.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("refresh_token", login.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",

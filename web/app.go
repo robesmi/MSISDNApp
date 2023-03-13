@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/sessions"
+  	"github.com/gin-contrib/sessions/cookie"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/config"
@@ -32,7 +34,9 @@ func Start(){
 		c.Redirect(http.StatusMovedPermanently, "/login")
 	})
 	
-	
+	store := cookie.NewStore([]byte("secret"))
+  	router.Use(sessions.Sessions("mysession", store))
+
 	router.GET("/register", ah.GetRegisterPage)
 	router.POST("/register", ah.HandleNativeRegister)
 
@@ -54,8 +58,12 @@ func Start(){
 		c.Redirect(http.StatusTemporaryRedirect,"/login")
 	})
 
-	router.POST("/oauth/github/callback", ah.HandleGithubCode)
-	router.GET("/oauth/github/callback", func(c *gin.Context){
+	router.GET("/oauth/github", ah.HandleGithubLogin)
+	router.POST("/oauth/github", func(c *gin.Context){
+		c.Redirect(http.StatusTemporaryRedirect,"/oauth/github")
+	})
+	router.GET("/oauth/github/callback", ah.HandleGithubCode)
+	router.POST("/oauth/github/callback", func(c *gin.Context){
 		c.Redirect(http.StatusTemporaryRedirect,"/login")
 	})
 

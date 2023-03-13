@@ -21,6 +21,10 @@
         data-logo_alignment="left">
    </div>
 
+   <form action="/oauth/github" method="GET">
+    <input type="submit" value="Sign in with Github">
+   </form>
+
    <form action="/register" method="POST">
         {{ if .prevUsername }}
         <label>Email</label>
@@ -38,5 +42,6 @@
         {{ end }}
         <input type="submit" value="Login">
     </form>
+    <div> {{ .error }} </div>
     </body>
 </html>

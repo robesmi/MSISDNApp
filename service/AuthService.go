@@ -35,6 +35,9 @@ type AuthService interface {
 
 func (s DefaultAuthService) RegisterNativeUser(username string, password string) (*dto.LoginResponse, error){
 	
+	if username == "" || password == ""{
+		return nil, errs.NewInvalidCredentialsError()
+	}
 	//Checks if user exists and returns error if so
 	_ , err := s.repository.GetUserByUsername(username)
 	if _,ok := err.(*errs.UserNotFoundError); !ok {
@@ -73,7 +76,10 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string)
 
 func (s DefaultAuthService) LoginNativeUser(username string, password string) (*dto.LoginResponse, error){
 	
-	// Password check
+	if username == "" || password == ""{
+		return nil, errs.NewInvalidCredentialsError()
+	}
+
 	user, lookupErr := s.repository.GetUserByUsername(username)
 	if lookupErr != nil {
 		return nil, nil
@@ -107,6 +113,9 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 
 func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResponse, error){
 	
+	if username == ""{
+		return nil, errs.NewInvalidCredentialsError()
+	}
 	_ , err := s.repository.GetUserByUsername(username)
 	if _, ok := err.(*errs.UserNotFoundError); ok {
 		//Creates new id, encrypted password and tokens and registers to db
@@ -138,7 +147,11 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 }
 
 func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginResponse, error){
-	// Password check
+
+	if username == ""{
+		return nil, errs.NewInvalidCredentialsError()
+	}
+
 	user, lookupErr := s.repository.GetUserByUsername(username)
 	if lookupErr != nil {
 		return nil, nil
