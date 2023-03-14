@@ -17,17 +17,33 @@ import (
 var ctx *gin.Context
 var router *gin.Engine
 var lh MSISDNLookupHandler
-var mockService *service.MockMSISDNService
+var ah AuthHandler
+var aph AuthApiHandler
+var mockLookupService *service.MockMSISDNService
+var mockAuthService *service.MockAuthService
 
 func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 	
 	ctrl := gomock.NewController(t)
-	mockService = service.NewMockMSISDNService(ctrl)
-	lh = MSISDNLookupHandler{mockService}
+	mockLookupService = service.NewMockMSISDNService(ctrl)
+	mockAuthService = service.NewMockAuthService(ctrl)
+	lh = MSISDNLookupHandler{mockLookupService}
+	ah = AuthHandler{mockAuthService}
+	aph = AuthApiHandler{mockAuthService}
 
 	gin.SetMode(gin.TestMode)
 	ctx, router = gin.CreateTestContext(w)
 	router.POST("/lookup", lh.NumberLookup)
+
+	router.GET("/refresh", ah.RefreshAccessToken)
+	router.GET("/logout", ah.LogOut)
+	router.POST("/oauth/google/callback", ah.HandleGoogleCode)
+	router.GET("/oauth/github/callback", ah.HandleGithubCode)
+
+	router.POST("/service/api/register", aph.HandleNativeRegisterCall)
+	router.POST("/service/api/login", aph.HandleNativeLoginCall)
+	router.POST("/service/api/refresh", aph.RefreshAccessTokenCall)
+	router.POST("/service/api/logout", aph.LogOutCall)
 
 
 	return func() {
@@ -122,9 +138,9 @@ func TestNumberLookup(t *testing.T) {
 
 			if test.CallsService{
 				if test.ExpectsError{
-					mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.NewUnexpectedError(""))
+					mockLookupService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.NewUnexpectedError(""))
 				}else{
-				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, nil)
+					mockLookupService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, nil)
 				}
 			}
 			jsonReq := LookupRequest{
@@ -133,11 +149,9 @@ func TestNumberLookup(t *testing.T) {
 			jsonVal,_ := json.Marshal(jsonReq)	
 
 			//Act
-			req, err := http.NewRequest(http.MethodPost,"/lookup",bytes.NewBuffer(jsonVal))
+			req:= httptest.NewRequest(http.MethodPost,"/lookup",bytes.NewBuffer(jsonVal))
 			req.Header.Set("Content-Type","application/json")
-			if err!= nil{
-				t.Fatalf("Could not make request in " + test.Name)
-			}
+			
 			router.ServeHTTP(recorder,req)
 
 			//Assert

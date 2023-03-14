@@ -19,6 +19,11 @@ type AuthApiHandler struct {
 type RefreshRequest struct{
 	RefreshToken string `json:"refresh_token"`
 }
+ 
+var	(
+	validateAccessToken = utils.ValidateAccessToken
+	validateRefreshToken = utils.ValidateRefreshToken
+)
 
 // HandleNativeRegister gets a username/password combination from a form, performs needed validation and creates
 // a new user, returning a pair of access/refresh tokens and a success json
@@ -136,7 +141,7 @@ func (a AuthApiHandler) RefreshAccessTokenCall(c *gin.Context){
 		return
 	}
 
-	refClaims, valErr := utils.ValidateRefreshToken(refToken.RefreshToken)
+	refClaims, valErr := validateAccessToken(refToken.RefreshToken)
 	if valErr != nil{
 		log.Println("Error validating refresh token:" + valErr.Error())
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
@@ -175,7 +180,7 @@ func (a AuthApiHandler) LogOutCall(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	refClaims, valErr := utils.ValidateRefreshToken(refToken.RefreshToken)
+	refClaims, valErr := validateRefreshToken(refToken.RefreshToken)
 	if valErr != nil{
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
