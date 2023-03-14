@@ -3,7 +3,7 @@ package dto
 type NumberLookupResponse struct{
 	MNO string	`json:"MNO identifier" db:"mno"`
 	CC string	`json:"Country Code" db:"country_code"`
-	SN string	`json:"Subscriber Number""`
+	SN string	`json:"Subscriber Number"`
 	CI string	`json:"Country Identifier" db:"country_identifier"`
 }
 

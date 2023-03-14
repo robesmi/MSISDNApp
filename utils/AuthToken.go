@@ -43,7 +43,7 @@ func CreateAccessToken(role string) (string, error){
 func CreateRefreshToken(userid string) (string, error) {
 
 	claims := make(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(time.Hour * 12).Unix()
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
 	claims["iat"] = time.Now().Unix()
 	claims["nbf"] = time.Now().Unix()
 	claims["id"] = userid

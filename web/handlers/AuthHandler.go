@@ -11,8 +11,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/robesmi/MSISDNApp/config"
@@ -21,7 +19,6 @@ import (
 	"github.com/robesmi/MSISDNApp/utils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
-	"golang.org/x/oauth2/google"
 )
 
 type AuthHandler struct {
@@ -41,12 +38,6 @@ type GithubEmail struct{
 }
 
 //Configuring credentials for OAuth websites that will be implemented
-var googleConfig = &oauth2.Config{
-	Endpoint: google.Endpoint,
-	Scopes: []string{
-		"https://www.googleapis.com/auth/userinfo.email",
-	},
-}
 var githubConfig = &oauth2.Config{
 	Endpoint: github.Endpoint,
 	Scopes: []string{
@@ -56,12 +47,8 @@ var githubConfig = &oauth2.Config{
 
 func init(){
 
-	//Get the clientId/clientSecret pairs from a non published file and set them in the configs
+	//Get the identity provider information from a non published file and set them in the configs
 	config, _ := config.LoadConfig()
-
-	googleConfig.ClientID = config.GoogleClientID
-	googleConfig.ClientSecret = config.GoogleClientSecret
-	googleConfig.RedirectURL = config.GoogleRedirect
 
 	githubConfig.ClientID = config.GithubClientID
 	githubConfig.ClientSecret = config.GithubClientSecret
@@ -131,8 +118,8 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 		}
 	}
 
-	c.SetCookie("access_token", loginResp.AccessToken, int(time.Minute * 15),"/","localhost",false,true)
-	c.SetCookie("refresh_token", loginResp.RefreshToken, int(time.Hour * 24),"/","localhost",false,true)
+	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
@@ -220,9 +207,9 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	config, _ := config.LoadConfig()
 	idTokenFields := strings.Split(string(respData), "&")
 	clientId, idJWT ,csrfToken := strings.Split(idTokenFields[1],"=")[1], strings.Split(idTokenFields[2],"=")[1], strings.Split(idTokenFields[4],"=")[1]
-	csrfCookie,err := c.Request.Cookie("g_csrf_token")
 
 	// Verify the fields
+	csrfCookie,err := c.Request.Cookie("g_csrf_token")
 	if err != nil{
 		log.Println("Error getting csrf protection cookie" + err.Error())
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -367,8 +354,8 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	c.SetCookie("access_token", resp.AccessToken, int(time.Minute * 15),"/","localhost",false,true)
-	c.SetCookie("refresh_token", resp.RefreshToken, int(time.Hour * 24),"/","localhost",false,true)
+	c.SetCookie("access_token", resp.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("refresh_token", resp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 	c.Redirect(http.StatusTemporaryRedirect, c.Query("redirect"))
 }
 func (a AuthHandler) LogOut(c *gin.Context) {

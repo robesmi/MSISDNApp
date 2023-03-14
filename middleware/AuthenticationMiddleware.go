@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -35,20 +36,26 @@ func ValidateTokenUserSection(c *gin.Context){
 			claims, err = utils.ValidateAccessToken(access_token)
 			if err != nil{
 				if _,ok := err.(*errs.ExpiredTokenError); ok{
-					//Do token refresh logic here
+
+					//Check for presence and validity of refresh token
 					var refresh_token string
 					refresh_token,err = c.Cookie("refresh_token")
 					if err != nil{
-						c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "Access cookie with no refresh cookie case"})
+						log.Println("Access cookie with no refresh cookie request received")
+						c.Redirect(http.StatusTemporaryRedirect, "login")
+						c.Abort()
 						return
 					}
 					_, valErr := utils.ValidateRefreshToken(refresh_token)
 					if valErr != nil{
 						c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 						c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
-						c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "Error with refresh token" + err.Error()})
+						log.Println("Error with validating refresh token: " + valErr.Error())
+						c.Redirect(http.StatusTemporaryRedirect, "/login")
+						c.Abort()
 						return
 					}
+					// Redirect to refresh handler
 					c.Redirect(http.StatusTemporaryRedirect,"/refresh?redirect=" + c.FullPath())
 					c.Abort()
 					return
@@ -66,7 +73,8 @@ func ValidateTokenUserSection(c *gin.Context){
 				c.Next()
 				return
 			}else{
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "status":"fail", "message": "Unauthorized"})
+				c.Redirect(http.StatusTemporaryRedirect, "/?error=Unauthorized")
+				c.Abort()
 				return
 			}
 			
@@ -94,34 +102,48 @@ func ValidateTokenAdminSection(c *gin.Context){
 		// Check whether the token is valid
 		var claims jwt.MapClaims
 		var err error
-		claims,err = utils.ValidateAccessToken(access_token)
+		claims, err = utils.ValidateAccessToken(access_token)
 		if err != nil{
-			if _,ok := err.(errs.ExpiredTokenError);ok{
-				//Do token refresh logic here
+			if _,ok := err.(*errs.ExpiredTokenError); ok{
+
+				//Check for presence and validity of refresh token
 				var refresh_token string
 				refresh_token,err = c.Cookie("refresh_token")
 				if err != nil{
-					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "Access cookie with no refresh cookie case"})
+					log.Println("Access cookie with no refresh cookie request received")
+					c.Redirect(http.StatusTemporaryRedirect, "login")
+					c.Abort()
+					return
 				}
 				_, valErr := utils.ValidateRefreshToken(refresh_token)
 				if valErr != nil{
 					c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 					c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
-					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status": "fail", "message": "Error with refresh token" + err.Error()})
+					log.Println("Error with validating refresh token: " + valErr.Error())
+					c.Redirect(http.StatusTemporaryRedirect, "/login")
+					c.Abort()
+					return
 				}
+				// Redirect to refresh handler
 				c.Redirect(http.StatusTemporaryRedirect,"/refresh?redirect=" + c.FullPath())
-
+				c.Abort()
+				return
+	
 			}else{
-				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "status":"fail", "message": err.Error()})
+				c.Redirect(http.StatusTemporaryRedirect, "/login")
+				c.Abort()
+				return
 			}
 		}
 		
 		// Check if token has appropriate role
 		role := claims["role"]
-		if role == "user"{
+		if role == "admin"{
 			c.Next()
 		}else{
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "status":"fail", "message": "Unauthorized"})
+			c.Redirect(http.StatusTemporaryRedirect, "/?error=Unauthorized")
+			c.Abort()
+			return
 		}
 		
 }

@@ -16,14 +16,20 @@ func NewAuthRepository(client *sqlx.DB) UserRepositoryDb {
 }
 
 type UserRepository interface {
+	// GetUserByUsername takes a username and returns a full user if found, a UserNotFoundError if no
+	// such user is found, or UnexpectedError otherwise
 	GetUserByUsername(string) (*model.User, error)
+	// GetUserByUsername takes a uuid and returns a full user if found, a UserNotFoundError if no
+	// such user is found, or UnexpectedError otherwise
 	GetUserById(string) (*model.User, error)
-	// RegisterNativeUser takes a UUID, username, password, role, JWT Access and Refresh tokens and saves the user
+	// RegisterNativeUser takes a UUID, username, password, role, JWT Refresh token and saves the user
 	// in the db, returning an error if unsuccessful
 	RegisterNativeUser(string, string, string, string, string) error
-	// RegisterNativeUser takes a username, role, JWT Access and Refresh tokens and saves the user
+	// RegisterImporteduser takes a username, role, JWT Refresh token and saves the user
 	// in the db, returning an error if unsuccessful
 	RegisterImportedUser(string, string, string, string) error
+	// UpdateRefreshToken takes a uuid and a refresh token and updates the user's
+	// refresh token, returning an error if unsuccessful
 	UpdateRefreshToken(string, string) error
 }
 
@@ -43,7 +49,6 @@ func (db UserRepositoryDb) GetUserByUsername(username string) (*model.User, erro
 }
 
 
-
 func (db UserRepositoryDb) GetUserById(id string) (*model.User, error){
 	var user model.User
 	sqlFind := "SELECT id, username, password, role, refresh_token FROM users WHERE id = ?"
@@ -58,6 +63,7 @@ func (db UserRepositoryDb) GetUserById(id string) (*model.User, error){
 	return &user, nil
 
 }
+
 
 func (db UserRepositoryDb) RegisterNativeUser(uuid string, username string, password string, role string, refresh_token string) (error){
 	

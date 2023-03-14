@@ -21,13 +21,18 @@ func ReturnAuthService(repository repository.UserRepository) AuthService {
 type AuthService interface {
 	// RegisterNativeUser adds a new user to the user database using the conventional user+password combination
 	RegisterNativeUser(string, string) (*dto.LoginResponse, error)
-	// Login native user searches users via username and password combination, generates new access and refresh tokens
+	// LoginNativeUser searches a user and confirms valid credentials, generates new access and refresh tokens
+	// and returns them
 	LoginNativeUser(string,string) (*dto.LoginResponse, error)
+	// RegisterImportedUser adds a new user to the user database using the email received from the Identity Provider
 	RegisterImportedUser(string) (*dto.LoginResponse, error)
+	// LoginImportedUser searches a user via the received email from the Identity Provider, generates access and refresh
+	// tokens and returns them
 	LoginImportedUser(string) (*dto.LoginResponse, error)
 	// RefreshTokens takes a uuid and a refresh token, checking if the token matches the database one and returning
 	// a new pair of tokens if successful, or an error otherwise
 	RefreshTokens(string, string) (*dto.LoginResponse, error)
+	// LogOutUser finds a user via uuid and removes their refresh token in the database
 	LogOutUser(string) (error)
 
 }
@@ -38,30 +43,29 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string)
 	if username == "" || password == ""{
 		return nil, errs.NewInvalidCredentialsError()
 	}
-	//Checks if user exists and returns error if so
+
 	_ , err := s.repository.GetUserByUsername(username)
 	if _,ok := err.(*errs.UserNotFoundError); !ok {
 		return nil, errs.NewUserAlreadyExistsError()
 	}
 
-	//Creates new id, encrypted password and tokens and registers to db
 	newID := uuid.NewString()
 	
-	accessToken , errrr := utils.CreateAccessToken("user")
-	if errrr != nil{
-		return nil, errrr
+	accessToken , atErr := utils.CreateAccessToken("user")
+	if atErr != nil{
+		return nil, atErr
 	}
-	refreshToken, erra := utils.CreateRefreshToken(newID)
-	if erra != nil {
-		return nil, erra
+	refreshToken, rtErr := utils.CreateRefreshToken(newID)
+	if rtErr != nil {
+		return nil, rtErr
 	}
-	encodedPassword, erro := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
-	if erro != nil{
-		return nil, errs.NewUnexpectedError(err.Error())
+	encodedPassword, genErr := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
+	if genErr != nil{
+		return nil, errs.NewUnexpectedError(genErr.Error())
 	}
-	errr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), "user",refreshToken)
-	if errr != nil {
-		return nil, errs.NewUnexpectedError(err.Error())
+	regErr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), "user",refreshToken)
+	if regErr != nil {
+		return nil, errs.NewUnexpectedError(regErr.Error())
 	}
 
 	// If successful, returns the tokens
@@ -118,7 +122,7 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 	}
 	_ , err := s.repository.GetUserByUsername(username)
 	if _, ok := err.(*errs.UserNotFoundError); ok {
-		//Creates new id, encrypted password and tokens and registers to db
+		
 		newID := uuid.NewString()
 		
 		accessToken , atErr := utils.CreateAccessToken("user")
@@ -134,7 +138,6 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 			return nil, errr
 		}
 
-		// If successful, returns the login response
 		var response = dto.LoginResponse{
 			AccessToken: accessToken,
 			RefreshToken: refreshToken,
