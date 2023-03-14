@@ -26,8 +26,8 @@ type AuthHandler struct {
 }
 
 type LoginForm struct {
-	Username string `form:"username"`
-	Password string `form:"password"`
+	Username string `form:"username" json:"username"`
+	Password string `form:"password" json:"password"`
 }
 
 type GithubEmail struct{
@@ -48,7 +48,10 @@ var githubConfig = &oauth2.Config{
 func init(){
 
 	//Get the identity provider information from a non published file and set them in the configs
-	config, _ := config.LoadConfig()
+	config, err := config.LoadConfig()
+	if err != nil{
+		log.Println("Error loading config: " + err.Error())
+	}
 
 	githubConfig.ClientID = config.GithubClientID
 	githubConfig.ClientSecret = config.GithubClientSecret
@@ -92,7 +95,7 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 	passwordRegex := regexp.MustCompile(`^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$`)
 		if passwordRegex.MatchString(login.Password){
 		c.HTML(http.StatusBadRequest, "register.html", gin.H{
-			"error": "Password must have at least 8 characters, contain at least 1 uppercase letter, 1 lower case letter and a number.",
+			"error": "Password must have at least 8 characters, contain at least 1 uppercase letter, 1 lower case letter,1 number and a special character.",
 			"prevUsername": login.Username,
 			"prevPassword": login.Password,
 		})
@@ -121,23 +124,20 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"access_token" : loginResp.AccessToken,
-		"refresh_token" : loginResp.RefreshToken,
-	})
+	c.Redirect(http.StatusTemporaryRedirect,"service/lookup")
 }
 
 // HandleNativeLogin will log in the users that choose to use a local account
 func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 	var login LoginForm
 	if err := c.Bind(&login); err != nil{
+		log.Println("Error binding login form: " + err.Error())
 		return
 	}
 	
 	emailRegex := regexp.MustCompile("[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
 	if !emailRegex.MatchString(login.Username){
-		c.HTML(http.StatusOK, "login.html", gin.H{
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{
 			"error": "Enter a valid email address",
 			"prevUsername": login.Username,
 			"prevPassword": login.Password,
@@ -148,7 +148,7 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 	passwordRegex := regexp.MustCompile(`^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$`)
 	if passwordRegex.MatchString(login.Password){
 		c.HTML(http.StatusBadRequest, "login.html", gin.H{
-			"error": "Password must have at least 8 characters, contain at least 1 uppercase letter, 1 lower case letter and a number.",
+			"error": "Password must have at least 8 characters, contain at least 1 uppercase letter, 1 lower case letter,1 number and a special character.",
 			"prevUsername": login.Username,
 			"prevPassword": login.Password,
 		})
@@ -157,14 +157,6 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 
 	loginResp, err := a.Service.LoginNativeUser(login.Username, login.Password)
 	if err != nil{
-		if _,ok := err.(*errs.UserAlreadyExists); ok{
-			c.HTML(http.StatusBadRequest, "login.html", gin.H{
-				"error": "Email already in use",
-				"prevUsername": login.Username,
-				"prevPassword": login.Password,
-			})
-			return
-		}
 		if _,ok := err.(*errs.InvalidCredentials); ok{
 			c.HTML(http.StatusBadRequest, "login.html", gin.H{
 				"error": "Email or password is incorrect",
@@ -199,6 +191,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	// Get the data from google's response
 	respData,readErr := io.ReadAll(c.Request.Body)
 	if readErr != nil{
+		log.Println("Error reading the google id token response: " + readErr.Error())
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
@@ -268,6 +261,8 @@ func (a AuthHandler) HandleGithubLogin(c *gin.Context){
 	url := githubConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("client_id", githubConfig.ClientID), oauth2.SetAuthURLParam("redirect_uri",githubConfig.RedirectURL), oauth2.SetAuthURLParam("scope", githubConfig.Scopes[0]))
 	c.Redirect(http.StatusTemporaryRedirect,url)
 }
+
+
 // HandleGithubCode receives the access code from google's redirect and makes a post request
 // to receive the appropriate access token and refresh token
 func (a AuthHandler) HandleGithubCode(c *gin.Context){
@@ -277,6 +272,7 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 	responseState := session.Get("state")
 	if responseState != c.Query("state"){
 		c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("invalid session state %s",responseState))
+		log.Printf("Error validating state in github login, expected %s got %s", responseState, c.Query("state"), )
 		return
 	}
 
@@ -295,18 +291,21 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 		return
 	}
 	defer resp.Body.Close()
-	username, errr := io.ReadAll(resp.Body)
-	if errr != nil {
+
+	userEmailsJson, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
 		c.Redirect(http.StatusTemporaryRedirect, "/register")
+		log.Println("Error reading github user emails json: " + readErr.Error())
 		return
 	}
 	var userEmails []GithubEmail
-	json.Unmarshal(username,&userEmails)
+	json.Unmarshal(userEmailsJson,&userEmails)
 
 	var primaryEmail string
 	for k := range userEmails {		
 		if userEmails[k].Primary{
 			primaryEmail = userEmails[k].Email
+			break
 		}
 	}
 	
@@ -315,11 +314,11 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 		var newErr error
 		login, newErr = a.Service.LoginImportedUser(primaryEmail)
 		if newErr != nil{
-			log.Println("Error " + newErr.Error())
+			log.Println("Error logging in imported user: " + newErr.Error())
 			return
 		}
 	}else if appErr != nil{
-		log.Println("Error with github authentication")
+		log.Println("Error with github authentication: " + appErr.Error())
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
@@ -344,6 +343,7 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 	}
 	refClaims, valErr := utils.ValidateRefreshToken(refToken)
 	if valErr != nil{
+		log.Println("Error validating refresh token:" + valErr.Error())
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -351,6 +351,7 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 	}
 	resp, err := a.Service.RefreshTokens(fmt.Sprint(refClaims["id"]),refToken)
 	if err != nil{
+		log.Println("Error refreshing access token: " + err.Error())
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
@@ -358,9 +359,15 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 	c.SetCookie("refresh_token", resp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 	c.Redirect(http.StatusTemporaryRedirect, c.Query("redirect"))
 }
+
 func (a AuthHandler) LogOut(c *gin.Context) {
 	refToken, err := c.Cookie("refresh_token")
+	if refToken == ""{
+		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		return
+	}
 	if err != nil {
+		log.Println("Error logging user out: " + err.Error())
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}

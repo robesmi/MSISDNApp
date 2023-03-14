@@ -30,14 +30,14 @@
     <form action="/login" method="POST">
         {{ if .prevUsername }}
         <label>Email</label>
-        <input type="text" placeholder="{{ .prevUsername }}" name="username">
+        <input type="text" value="{{ .prevUsername }}" name="username">
         {{ else }}
         <label>Email</label>
         <input type="text" name="username">
         {{ end }}
         {{ if .prevPassword }}
         <label>Password</label>
-        <input type="text" placeholder="{{ .prevPassword }}" name="password">
+        <input type="password" value="{{ .prevPassword }}" name="password">
         {{ else }}
         <label>Password</label>
         <input type="text" name="password">
@@ -47,7 +47,9 @@
     <form action="/logout" method="GET">
         <input type="submit" value="Log out">
     </form>
-    <div> {{ .error }}</div>
+    {{ if  .error}}
+    <div class="error">{{ .error }}</div>
+    {{ end }}
 </body>
 
 </html>
