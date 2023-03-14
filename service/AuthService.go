@@ -17,7 +17,7 @@ type DefaultAuthService struct {
 func ReturnAuthService(repository repository.UserRepository) AuthService {
 	return DefaultAuthService{repository: repository}
 }
-
+//go:generate mockgen -destination=../mocks/service/mockAuthService.go -package=service github.com/robesmi/MSISDNApp/service AuthService
 type AuthService interface {
 	// RegisterNativeUser adds a new user to the user database using the conventional user+password combination
 	RegisterNativeUser(string, string) (*dto.LoginResponse, error)
@@ -36,6 +36,10 @@ type AuthService interface {
 	LogOutUser(string) (error)
 
 }
+var (
+	createAccessToken = utils.CreateAccessToken
+	createRefreshToken = utils.CreateRefreshToken
+)
 
 
 func (s DefaultAuthService) RegisterNativeUser(username string, password string) (*dto.LoginResponse, error){
@@ -51,11 +55,11 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string)
 
 	newID := uuid.NewString()
 	
-	accessToken , atErr := utils.CreateAccessToken("user")
+	accessToken , atErr := createAccessToken("user")
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := utils.CreateRefreshToken(newID)
+	refreshToken, rtErr := createRefreshToken(newID)
 	if rtErr != nil {
 		return nil, rtErr
 	}
@@ -94,11 +98,11 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 	}
 
 	// Create new tokens and update the refresh token in db
-	accessToken , atErr := utils.CreateAccessToken("user")
+	accessToken , atErr := createAccessToken("user")
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := utils.CreateRefreshToken(user.UUID)
+	refreshToken, rtErr := createRefreshToken(user.UUID)
 	if rtErr != nil {
 		return nil, rtErr
 	}
@@ -125,11 +129,11 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 		
 		newID := uuid.NewString()
 		
-		accessToken , atErr := utils.CreateAccessToken("user")
+		accessToken , atErr := createAccessToken("user")
 		if atErr != nil{
 			return nil, atErr
 		}
-		refreshToken, rtErr := utils.CreateRefreshToken(newID)
+		refreshToken, rtErr := createRefreshToken(newID)
 		if rtErr != nil {
 			return nil, rtErr
 		}
@@ -161,11 +165,11 @@ func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginRespons
 	}
 
 	// Create new tokens and update the refresh token in db
-	accessToken , atErr := utils.CreateAccessToken("user")
+	accessToken , atErr := createAccessToken("user")
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := utils.CreateRefreshToken(user.UUID)
+	refreshToken, rtErr := createRefreshToken(user.UUID)
 	if rtErr != nil {
 		return nil, rtErr
 	}
@@ -190,11 +194,11 @@ func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginRes
 	if user.RefreshToken != token{
 		return nil, errs.NewRefreshTokenMismatch()
 	}
-	accessToken , atErr := utils.CreateAccessToken(user.Role)
+	accessToken , atErr := createAccessToken(user.Role)
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := utils.CreateRefreshToken(user.UUID)
+	refreshToken, rtErr := createRefreshToken(user.UUID)
 	if rtErr != nil {
 		return nil, rtErr
 	}

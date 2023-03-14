@@ -10,18 +10,23 @@ import (
 	"github.com/robesmi/MSISDNApp/model/errs"
 )
 
-var mockRepo *repository.MockMSISDNRepository
-var service MSISDNService
+var mockMSISDNRepo *repository.MockMSISDNRepository
+var mockUserRepo *repository.MockUserRepository
+var lookupService MSISDNService
+var authService AuthService
 
 func setup(t *testing.T) func(){
 
 
 	ctrl := gomock.NewController(t)
-	mockRepo = repository.NewMockMSISDNRepository(ctrl)
-	service = NewMSISDNService(mockRepo)
+	mockMSISDNRepo = repository.NewMockMSISDNRepository(ctrl)
+	mockUserRepo = repository.NewMockUserRepository(ctrl)
+	lookupService = NewMSISDNService(mockMSISDNRepo)
+	authService = ReturnAuthService(mockUserRepo)
 
 	return func(){
-		service = nil
+		lookupService = nil
+		authService = nil
 		ctrl.Finish()
 	}
 }
@@ -35,10 +40,10 @@ func TestNonExistantCountryNumber(t *testing.T) {
 	input := "6934567890"
 	expErr := errs.NewNumberNotFoundError()
 
-	mockRepo.EXPECT().LookupCountryCode(input).Return(nil, expErr)
+	mockMSISDNRepo.EXPECT().LookupCountryCode(input).Return(nil, expErr)
 
 	// Act
-	_, err := service.LookupMSISDN(input)
+	_, err := lookupService.LookupMSISDN(input)
 
 	//Assert
 	if !errors.Is(err, expErr){
@@ -64,12 +69,12 @@ func TestNonExistantOperatorNumber(t *testing.T) {
 	}
 
 	gomock.InOrder(
-		mockRepo.EXPECT().LookupCountryCode(input).Return(&expCountryResponse, nil),
-		mockRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryIdentifier, nextInput).Return(nil, expErr),
+		mockMSISDNRepo.EXPECT().LookupCountryCode(input).Return(&expCountryResponse, nil),
+		mockMSISDNRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryIdentifier, nextInput).Return(nil, expErr),
 	)
 
 	// Act
-	_, err := service.LookupMSISDN(input)
+	_, err := lookupService.LookupMSISDN(input)
 
 	//Assert
 	if !errors.Is(err, expErr){
@@ -103,12 +108,12 @@ func TestValidNumber(t *testing.T) {
 	} 
 
 	gomock.InOrder(
-		mockRepo.EXPECT().LookupCountryCode(input).Return(&expCountryResponse, nil),
-		mockRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryIdentifier, secondInput).Return(&expMOResponse, nil),
+		mockMSISDNRepo.EXPECT().LookupCountryCode(input).Return(&expCountryResponse, nil),
+		mockMSISDNRepo.EXPECT().LookupMobileOperator(expCountryResponse.CountryIdentifier, secondInput).Return(&expMOResponse, nil),
 	)
 
 	// Act
-	response, err := service.LookupMSISDN(input)
+	response, err := lookupService.LookupMSISDN(input)
 
 	//Assert
 	if err != nil || response == nil || !response.Compare(expFunctionResponse){

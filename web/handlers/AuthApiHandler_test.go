@@ -78,6 +78,7 @@ func TestNativeRegisterCallBadEmail(t *testing.T) {
 
 }
 
+
 func TestNativeRegisterCallBadPassword(t *testing.T) {
 
 	//Arrange

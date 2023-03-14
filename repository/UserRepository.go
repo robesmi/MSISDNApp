@@ -14,6 +14,7 @@ type UserRepositoryDb struct {
 func NewAuthRepository(client *sqlx.DB) UserRepositoryDb {
 	return UserRepositoryDb{client}
 }
+//go:generate mockgen -destination=../mocks/repository/mockUserRepository.go -package=repository github.com/robesmi/MSISDNApp/repository UserRepository
 
 type UserRepository interface {
 	// GetUserByUsername takes a username and returns a full user if found, a UserNotFoundError if no
