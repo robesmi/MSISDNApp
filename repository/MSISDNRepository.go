@@ -24,7 +24,8 @@ type MSISDNRepository interface{
 	LookupCountryCode(string) (*dto.CountryLookupResponse, error)
 	// LookupMobileOperator takes a country identifier and a significant number and returns an MNO, length of carrier prefix, or an error
 	LookupMobileOperator(string, string) (*dto.MobileOperatorLookupResponse, error)
-
+	AddNewCountry(string, string, string, int) (error)
+	AddNewMobileOperator(string, string, string, int) (error)
 	GetAllCountries() (*[]model.Country, error)
 	GetAllMobileOperators() (*[]model.MobileOperator, error)
 }
@@ -79,4 +80,24 @@ func (repo MSISDNRepositoryDb) GetAllMobileOperators() (*[]model.MobileOperator,
 		return nil, err
 	}
 	return &response, nil
+}
+
+func (repo MSISDNRepositoryDb) AddNewCountry(numFormat string, cc string, ci string, cLen int) (error){
+
+	sqlAdd := "INSERT INTO countries VALUES (?,?,?,?)"
+	_, err := repo.db.Exec(sqlAdd, numFormat,cc,ci,cLen)
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+func (repo MSISDNRepositoryDb) AddNewMobileOperator(ci string, prefix string, mno string, prefixLen int) (error){
+
+	sqlAdd := "INSERT INTO mobile_operators VALUES (?,?,?,?)"
+	_, err := repo.db.Exec(sqlAdd, ci, prefix, mno, prefixLen)
+	if err != nil{
+		return err
+	}
+	return nil
 }

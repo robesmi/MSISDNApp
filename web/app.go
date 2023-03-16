@@ -85,7 +85,11 @@ func Start(){
 	}
 
 	router.GET("/admin/panel", adh.GetAdminPanelPage)
+
 	router.POST("/admin/adduser", adh.InsertNewUser)
+	router.POST("/admin/addcountry", adh.InsertNewCountry)
+	router.POST("/admin/addoperator", adh.InsertNewMobileOperator)
+	
 	router.POST("/admin/getusers", adh.GetAllUsers)
 	router.POST("/admin/getcountries", adh.GetAllCountries)
 	router.POST("/admin/getoperators", adh.GetAllMobileOperators)

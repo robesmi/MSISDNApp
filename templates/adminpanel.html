@@ -11,13 +11,47 @@
         <form id="add-user-panel" method="POST" action="/admin/adduser">
             <label for="usernameInput"> Username </label>
             <input id="usernameInput" name="username" type="text">
+
             <label for="passwordInput"> Password</label>
             <input  id="passwordInput" name="password" type="password">
+
             <label for="userRole"> User</label>
             <input type="radio" name="role" id="userRole" value="user">
+
             <label for="adminRole"> Admin </label>
             <input type="radio" name="role" id="adminRole" value="admin">
-            <input type="submit" value="Add">
+
+            <input type="submit" value="Add User">
+        </form>
+        <form id="add-country-panel" method="POST" action="/admin/addcountry">
+            <label for="countryFormat"> Country Number Format </label>
+            <input id="countryFormat" name="countryformat" type="text">
+
+            <label for="countryCode"> Country Code</label>
+            <input  id="countryCode" name="countrycode" type="text">
+
+            <label for="ciInput">Country Identifier</label>
+            <input  id="ciInput" type="text" name="countryidentifier">
+
+            <label for="ccLenInput" ></label>
+            <input id="ccLenInput" type="text" name="countrycodelength">
+
+            <input type="submit" value="Add Country">
+        </form>
+        <form id="add-operator-panel" method="POST" action="/admin/addoperator">
+            <label for="operatorCiInput"> Country Identifier </label>
+            <input id="operatorCiInput" name="countryidentifier" type="text">
+
+            <label for="operatorFormat"> Prefix Format</label>
+            <input  id="operatorFormat" name="prefixformat" type="text">
+
+            <label for="mnoInput"> MNO </label>
+            <input  id="mnoInput" type="text" name="mno">
+
+            <label for="prefixLen" > Prefix Length </label>
+            <input id="prefixLen" type="text" name="prefixlength">
+
+            <input type="submit" value="Add Operator">
         </form>
         {{ if .error }}
         <p> {{ .error }} </p>
@@ -26,12 +60,15 @@
         <form id="get-all-users" method="POST" action="/admin/getusers">
             <input type="submit" value="Get All Users">
         </form>
+
         <form id="get-all-countries" method="POST" action="/admin/getcountries">
             <input type="submit" value="Get All Countries">
         </form>
+
         <form id="get-all-operators" method="POST" action="/admin/getoperators">
             <input type="submit" value="Get All Operators">
         </form>
+
         {{ if .users }}
         <table>
             {{ with .users}}

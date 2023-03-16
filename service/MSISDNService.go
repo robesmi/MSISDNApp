@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
@@ -18,6 +20,8 @@ func NewMSISDNService(repository repository.MSISDNRepository) DefaultMSISDNServi
 
 type MSISDNService interface {
 	LookupMSISDN(string) (*dto.NumberLookupResponse, error)
+	AddNewCountry( *dto.CountryRequest) (error)
+	AddNewMobileOperator (*dto.OperatorRequest) (error)
 	GetAllCountries() (*[]model.Country, error)
 	GetAllMobileOperators() (*[]model.MobileOperator, error)
 }
@@ -67,4 +71,31 @@ func (s DefaultMSISDNService) GetAllMobileOperators() (*[]model.MobileOperator, 
 		return nil, err
 	}
 	return resp, nil
+}
+
+
+func (s DefaultMSISDNService) AddNewCountry( counReq *dto.CountryRequest) (error){
+
+	codeLength, err := strconv.Atoi(counReq.CountryCodeLength)
+	if err != nil{
+		return err
+	}
+	res := s.repo.AddNewCountry(counReq.CountryNumberFormat, counReq.CountryCode, strings.ToLower(counReq.CountryIdentifier), codeLength)
+	if res != nil{
+		return res
+	}
+	return nil
+}
+
+func (s DefaultMSISDNService) AddNewMobileOperator( mobileReq *dto.OperatorRequest) (error){
+
+	prefLength, err := strconv.Atoi(mobileReq.PrefixLength)
+	if err != nil{
+		return err
+	}
+	res := s.repo.AddNewMobileOperator(strings.ToLower(mobileReq.CountryIdentifier), mobileReq.PrefixFormat, mobileReq.MNO, prefLength)
+	if res != nil{
+		return res
+	}
+	return nil
 }

@@ -35,6 +35,34 @@ func (m *MockMSISDNRepository) EXPECT() *MockMSISDNRepositoryMockRecorder {
 	return m.recorder
 }
 
+// AddNewCountry mocks base method.
+func (m *MockMSISDNRepository) AddNewCountry(arg0, arg1, arg2 string, arg3 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddNewCountry", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddNewCountry indicates an expected call of AddNewCountry.
+func (mr *MockMSISDNRepositoryMockRecorder) AddNewCountry(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewCountry", reflect.TypeOf((*MockMSISDNRepository)(nil).AddNewCountry), arg0, arg1, arg2, arg3)
+}
+
+// AddNewMobileOperator mocks base method.
+func (m *MockMSISDNRepository) AddNewMobileOperator(arg0, arg1, arg2 string, arg3 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddNewMobileOperator", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddNewMobileOperator indicates an expected call of AddNewMobileOperator.
+func (mr *MockMSISDNRepositoryMockRecorder) AddNewMobileOperator(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewMobileOperator", reflect.TypeOf((*MockMSISDNRepository)(nil).AddNewMobileOperator), arg0, arg1, arg2, arg3)
+}
+
 // GetAllCountries mocks base method.
 func (m *MockMSISDNRepository) GetAllCountries() (*[]model.Country, error) {
 	m.ctrl.T.Helper()
