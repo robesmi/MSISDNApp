@@ -65,7 +65,8 @@ func CreateRefreshToken(userid string) (string, error) {
 	return token, nil
 }
 
-// ValidateRefreshToken takes a jwt access token as input and validates it
+// ValidateRefreshToken takes a jwt access token as input and validates it. Returns a jwt.MapClaims of the user role or
+// an error otherwise
 func ValidateAccessToken(token string) (jwt.MapClaims,error){
 	config, _ := config.LoadConfig()
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.AccessTokenPublicKey)
@@ -85,11 +86,6 @@ func ValidateAccessToken(token string) (jwt.MapClaims,error){
 		return key, nil
 	})
 
-	if err != nil{
-		log.Println(err.Error())
-		return nil, errs.NewUnexpectedError(err.Error())
-	}
-	
 	if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && parsedToken.Valid{
 		return claims, nil
 	}else if ve, ok := err.(*jwt.ValidationError); ok{
@@ -106,7 +102,8 @@ func ValidateAccessToken(token string) (jwt.MapClaims,error){
 	
 }
 
-// ValidateRefreshToken takes a jwt refresh token as input and validates it
+// ValidateRefreshToken takes a jwt refresh token as input and validates it. Returns a jwt.MapClaims of the user uuid or
+// an error
 func ValidateRefreshToken(token string) (jwt.MapClaims,error){
 	config, _ := config.LoadConfig()
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.RefreshTokenPublicKey)

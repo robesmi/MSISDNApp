@@ -25,6 +25,7 @@ func ValidateTokenUserSection(c *gin.Context){
 			}
 			// If there's no token in either, kick user back
 			if access_token == "" {
+				log.Println("No access token request")
 				c.Redirect(http.StatusTemporaryRedirect, "/login")
 				c.Abort()
 				return
@@ -42,7 +43,7 @@ func ValidateTokenUserSection(c *gin.Context){
 					refresh_token,err = c.Cookie("refresh_token")
 					if err != nil{
 						log.Println("Access cookie with no refresh cookie request received")
-						c.Redirect(http.StatusTemporaryRedirect, "login")
+						c.Redirect(http.StatusFound, "login")
 						c.Abort()
 						return
 					}
@@ -51,7 +52,7 @@ func ValidateTokenUserSection(c *gin.Context){
 						c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 						c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
 						log.Println("Error with validating refresh token: " + valErr.Error())
-						c.Redirect(http.StatusTemporaryRedirect, "/login")
+						c.Redirect(http.StatusFound, "/login")
 						c.Abort()
 						return
 					}
@@ -61,7 +62,7 @@ func ValidateTokenUserSection(c *gin.Context){
 					return
 	
 				}else{
-					c.Redirect(http.StatusTemporaryRedirect, "/login")
+					c.Redirect(http.StatusFound, "/login")
 					c.Abort()
 					return
 				}
@@ -71,9 +72,11 @@ func ValidateTokenUserSection(c *gin.Context){
 			role := claims["role"]
 			if role == "user"{
 				c.Next()
+				log.Println("User role request authenticated")
 				return
 			}else{
-				c.Redirect(http.StatusTemporaryRedirect, "/?error=Unauthorized")
+				log.Println("User role request unauthenticated")
+				c.Redirect(http.StatusFound, "/?error=Unauthorized")
 				c.Abort()
 				return
 			}
@@ -95,7 +98,9 @@ func ValidateTokenAdminSection(c *gin.Context){
 		}
 		// If there's no token in either, kick user back
 		if access_token == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "You are not logged in"})
+			log.Println("No access token request")
+			c.Redirect(http.StatusTemporaryRedirect, "/login")
+			c.Abort()
 			return
 		}
 		
@@ -111,7 +116,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 				refresh_token,err = c.Cookie("refresh_token")
 				if err != nil{
 					log.Println("Access cookie with no refresh cookie request received")
-					c.Redirect(http.StatusTemporaryRedirect, "login")
+					c.Redirect(http.StatusFound, "login")
 					c.Abort()
 					return
 				}
@@ -120,7 +125,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 					c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 					c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
 					log.Println("Error with validating refresh token: " + valErr.Error())
-					c.Redirect(http.StatusTemporaryRedirect, "/login")
+					c.Redirect(http.StatusFound, "/login")
 					c.Abort()
 					return
 				}
@@ -128,19 +133,22 @@ func ValidateTokenAdminSection(c *gin.Context){
 				c.Redirect(http.StatusTemporaryRedirect,"/refresh?redirect=" + c.FullPath())
 				c.Abort()
 				return
-	
+
 			}else{
-				c.Redirect(http.StatusTemporaryRedirect, "/login")
+				c.Redirect(http.StatusFound, "/login")
 				c.Abort()
 				return
 			}
 		}
+	
 		
 		// Check if token has appropriate role
 		role := claims["role"]
 		if role == "admin"{
+			log.Println("Admin role request authenticated")
 			c.Next()
 		}else{
+			log.Println("Admin role request unauthenticated")
 			c.Redirect(http.StatusTemporaryRedirect, "/?error=Unauthorized")
 			c.Abort()
 			return
