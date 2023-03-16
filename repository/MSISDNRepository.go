@@ -2,8 +2,10 @@ package repository
 
 import (
 	"database/sql"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
 )
@@ -22,6 +24,9 @@ type MSISDNRepository interface{
 	LookupCountryCode(string) (*dto.CountryLookupResponse, error)
 	// LookupMobileOperator takes a country identifier and a significant number and returns an MNO, length of carrier prefix, or an error
 	LookupMobileOperator(string, string) (*dto.MobileOperatorLookupResponse, error)
+
+	GetAllCountries() (*[]model.Country, error)
+	GetAllMobileOperators() (*[]model.MobileOperator, error)
 }
 
 
@@ -52,4 +57,26 @@ func (repo MSISDNRepositoryDb) LookupMobileOperator(ci string, significantNumber
 		}
 	}
 	return &response,nil
+}
+
+func (repo MSISDNRepositoryDb) GetAllCountries() (*[]model.Country,error){
+
+	var response []model.Country
+	sqlQuery := "SELECT * FROM countries"
+	err := repo.db.Select(&response, sqlQuery)
+	if err != nil{
+		return nil, err
+	}
+	return &response,nil
+}
+
+func (repo MSISDNRepositoryDb) GetAllMobileOperators() (*[]model.MobileOperator, error){
+
+	var response []model.MobileOperator
+	sqlQuery := "SELECT * FROM mobile_operators"
+	err := repo.db.Select(&response,sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+	return &response, nil
 }

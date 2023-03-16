@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"log"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/errs"
@@ -17,6 +19,8 @@ func NewAuthRepository(client *sqlx.DB) UserRepositoryDb {
 //go:generate mockgen -destination=../mocks/repository/mockUserRepository.go -package=repository github.com/robesmi/MSISDNApp/repository UserRepository
 
 type UserRepository interface {
+	// Can you figure out what this does?
+	GetAllUsers() (*[]model.User, error)
 	// GetUserByUsername takes a username and returns a full user if found, a UserNotFoundError if no
 	// such user is found, or UnexpectedError otherwise
 	GetUserByUsername(string) (*model.User, error)
@@ -32,6 +36,19 @@ type UserRepository interface {
 	// UpdateRefreshToken takes a uuid and a refresh token and updates the user's
 	// refresh token, returning an error if unsuccessful
 	UpdateRefreshToken(string, string) error
+}
+
+func (db UserRepositoryDb) GetAllUsers() (*[]model.User, error){
+
+	var allUsers []model.User
+	sqlGet := "SELECT * FROM users"
+	err := db.client.Select(&allUsers, sqlGet)
+	if err != nil{
+		log.Println("Error in GetAllUsers: " + err.Error())
+		return nil, err
+	}
+	return &allUsers, nil
+
 }
 
 func (db UserRepositoryDb) GetUserByUsername(username string) (*model.User, error){

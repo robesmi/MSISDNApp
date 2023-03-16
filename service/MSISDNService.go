@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+
+	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/repository"
 )
@@ -16,6 +18,8 @@ func NewMSISDNService(repository repository.MSISDNRepository) DefaultMSISDNServi
 
 type MSISDNService interface {
 	LookupMSISDN(string) (*dto.NumberLookupResponse, error)
+	GetAllCountries() (*[]model.Country, error)
+	GetAllMobileOperators() (*[]model.MobileOperator, error)
 }
 
 // LookupMSISDN takes a full MSISDN as a string and returns
@@ -45,4 +49,22 @@ func (s DefaultMSISDNService) LookupMSISDN(input string) (*dto.NumberLookupRespo
 		CC: countryResponse.CountryCode,
 	}
 	return &response, nil
+}
+
+func (s DefaultMSISDNService) GetAllCountries() (*[]model.Country, error){
+
+	resp, err := s.repo.GetAllCountries()
+	if err != nil{
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (s DefaultMSISDNService) GetAllMobileOperators() (*[]model.MobileOperator, error){
+
+	resp, err := s.repo.GetAllMobileOperators()
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

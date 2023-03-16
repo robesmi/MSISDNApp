@@ -27,6 +27,8 @@ func Start(){
 	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo)}
 	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo)}
 	aph := handlers.AuthApiHandler{Service: service.ReturnAuthService(aurepo)}
+	adh := handlers.AdminActionsHandler{AuthService: service.ReturnAuthService(aurepo), 
+		MSISDNService: service.NewMSISDNService(msrepo)}
 
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
@@ -81,6 +83,12 @@ func Start(){
 		authorized.POST("/lookup", mh.NumberLookup)
 		
 	}
+
+	router.GET("/admin/panel", adh.GetAdminPanelPage)
+	router.POST("/admin/adduser", adh.InsertNewUser)
+	router.POST("/admin/getusers", adh.GetAllUsers)
+	router.POST("/admin/getcountries", adh.GetAllCountries)
+	router.POST("/admin/getoperators", adh.GetAllMobileOperators)
 
 	adminGroup := router.Group("/admin")
 	adminGroup.Use(middleware.ValidateTokenAdminSection)

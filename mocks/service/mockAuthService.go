@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/robesmi/MSISDNApp/model"
 	dto "github.com/robesmi/MSISDNApp/model/dto"
 )
 
@@ -32,6 +33,21 @@ func NewMockAuthService(ctrl *gomock.Controller) *MockAuthService {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 	return m.recorder
+}
+
+// GetAllUsers mocks base method.
+func (m *MockAuthService) GetAllUsers() (*[]model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllUsers")
+	ret0, _ := ret[0].(*[]model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllUsers indicates an expected call of GetAllUsers.
+func (mr *MockAuthServiceMockRecorder) GetAllUsers() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockAuthService)(nil).GetAllUsers))
 }
 
 // LogOutUser mocks base method.
@@ -109,16 +125,16 @@ func (mr *MockAuthServiceMockRecorder) RegisterImportedUser(arg0 interface{}) *g
 }
 
 // RegisterNativeUser mocks base method.
-func (m *MockAuthService) RegisterNativeUser(arg0, arg1 string) (*dto.LoginResponse, error) {
+func (m *MockAuthService) RegisterNativeUser(arg0, arg1, arg2 string) (*dto.LoginResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterNativeUser", arg0, arg1)
+	ret := m.ctrl.Call(m, "RegisterNativeUser", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*dto.LoginResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RegisterNativeUser indicates an expected call of RegisterNativeUser.
-func (mr *MockAuthServiceMockRecorder) RegisterNativeUser(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) RegisterNativeUser(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNativeUser", reflect.TypeOf((*MockAuthService)(nil).RegisterNativeUser), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNativeUser", reflect.TypeOf((*MockAuthService)(nil).RegisterNativeUser), arg0, arg1, arg2)
 }

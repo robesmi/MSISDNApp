@@ -1,8 +1,8 @@
 package service
 
 import (
-
 	"github.com/google/uuid"
+	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/repository"
@@ -20,7 +20,7 @@ func ReturnAuthService(repository repository.UserRepository) AuthService {
 //go:generate mockgen -destination=../mocks/service/mockAuthService.go -package=service github.com/robesmi/MSISDNApp/service AuthService
 type AuthService interface {
 	// RegisterNativeUser adds a new user to the user database using the conventional user+password combination
-	RegisterNativeUser(string, string) (*dto.LoginResponse, error)
+	RegisterNativeUser(string, string, string) (*dto.LoginResponse, error)
 	// LoginNativeUser searches a user and confirms valid credentials, generates new access and refresh tokens
 	// and returns them
 	LoginNativeUser(string,string) (*dto.LoginResponse, error)
@@ -34,6 +34,8 @@ type AuthService interface {
 	RefreshTokens(string, string) (*dto.LoginResponse, error)
 	// LogOutUser finds a user via uuid and removes their refresh token in the database
 	LogOutUser(string) (error)
+	// Take a guess
+	GetAllUsers() (*[]model.User, error)
 
 }
 var (
@@ -42,7 +44,7 @@ var (
 )
 
 
-func (s DefaultAuthService) RegisterNativeUser(username string, password string) (*dto.LoginResponse, error){
+func (s DefaultAuthService) RegisterNativeUser(username string, password string, role string) (*dto.LoginResponse, error){
 	
 	if username == "" || password == ""{
 		return nil, errs.NewInvalidCredentialsError()
@@ -55,7 +57,7 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string)
 
 	newID := uuid.NewString()
 	
-	accessToken , atErr := createAccessToken("user")
+	accessToken , atErr := createAccessToken(role)
 	if atErr != nil{
 		return nil, atErr
 	}
@@ -67,7 +69,7 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string)
 	if genErr != nil{
 		return nil, errs.NewUnexpectedError(genErr.Error())
 	}
-	regErr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), "user",refreshToken)
+	regErr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), role, refreshToken)
 	if regErr != nil {
 		return nil, errs.NewUnexpectedError(regErr.Error())
 	}
@@ -225,4 +227,13 @@ func (s DefaultAuthService) LogOutUser(id string) (error){
 	}
 	return nil
 
+}
+
+func (s DefaultAuthService) GetAllUsers() (*[]model.User, error){
+
+	users, err := s.repository.GetAllUsers()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }

@@ -37,7 +37,7 @@ func TestRegisterNativeUserValidInput(t *testing.T) {
 	mockUserRepo.EXPECT().RegisterNativeUser(gomock.Any(),inputEmail,gomock.Any(),gomock.Any(),gomock.Any())
 
 	//Act
-	resp, err := authService.RegisterNativeUser(inputEmail,inputPassword)
+	resp, err := authService.RegisterNativeUser(inputEmail,inputPassword,"user")
 
 
 	//Assert
@@ -63,7 +63,7 @@ func TestRegisterNativeUserInvalidEmail(t *testing.T) {
 	expErr := errs.NewInvalidCredentialsError()
 
 	//Act
-	_, err := authService.RegisterNativeUser(inputEmail,inputPassword)
+	_, err := authService.RegisterNativeUser(inputEmail,inputPassword,"user")
 
 
 	//Assert
@@ -85,7 +85,7 @@ func TestRegisterNativeUserExistingEmail(t *testing.T) {
 	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(nil,expErr)
 
 	//Act
-	_, err := authService.RegisterNativeUser(inputEmail,inputPassword)
+	_, err := authService.RegisterNativeUser(inputEmail,inputPassword, "user")
 
 
 	//Assert

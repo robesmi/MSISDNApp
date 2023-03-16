@@ -102,7 +102,7 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 		return
 	}
 
-	loginResp, err := a.Service.RegisterNativeUser(login.Username, login.Password)
+	loginResp, err := a.Service.RegisterNativeUser(login.Username, login.Password, "user")
 	if err != nil{
 		if _,ok := err.(*errs.UserAlreadyExists); ok{
 			c.HTML(http.StatusBadRequest, "register.html", gin.H{

@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/robesmi/MSISDNApp/model"
 	dto "github.com/robesmi/MSISDNApp/model/dto"
 )
 
@@ -32,6 +33,36 @@ func NewMockMSISDNRepository(ctrl *gomock.Controller) *MockMSISDNRepository {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockMSISDNRepository) EXPECT() *MockMSISDNRepositoryMockRecorder {
 	return m.recorder
+}
+
+// GetAllCountries mocks base method.
+func (m *MockMSISDNRepository) GetAllCountries() (*[]model.Country, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllCountries")
+	ret0, _ := ret[0].(*[]model.Country)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllCountries indicates an expected call of GetAllCountries.
+func (mr *MockMSISDNRepositoryMockRecorder) GetAllCountries() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCountries", reflect.TypeOf((*MockMSISDNRepository)(nil).GetAllCountries))
+}
+
+// GetAllMobileOperators mocks base method.
+func (m *MockMSISDNRepository) GetAllMobileOperators() (*[]model.MobileOperator, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllMobileOperators")
+	ret0, _ := ret[0].(*[]model.MobileOperator)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllMobileOperators indicates an expected call of GetAllMobileOperators.
+func (mr *MockMSISDNRepositoryMockRecorder) GetAllMobileOperators() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMobileOperators", reflect.TypeOf((*MockMSISDNRepository)(nil).GetAllMobileOperators))
 }
 
 // LookupCountryCode mocks base method.

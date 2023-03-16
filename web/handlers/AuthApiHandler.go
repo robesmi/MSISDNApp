@@ -52,7 +52,7 @@ func (a AuthApiHandler) HandleNativeRegisterCall(c *gin.Context){
 		return
 	}
 
-	loginResp, err := a.Service.RegisterNativeUser(login.Username, login.Password)
+	loginResp, err := a.Service.RegisterNativeUser(login.Username, login.Password,"user")
 	if err != nil{
 		if _,ok := err.(*errs.UserAlreadyExists); ok{
 			c.JSON(http.StatusBadRequest, gin.H{

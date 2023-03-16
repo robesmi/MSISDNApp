@@ -1,0 +1,97 @@
+<html>
+
+    <head>
+
+
+        <title> Admin panel</title>
+    </head>
+
+    <body>
+
+        <form id="add-user-panel" method="POST" action="/admin/adduser">
+            <label for="usernameInput"> Username </label>
+            <input id="usernameInput" name="username" type="text">
+            <label for="passwordInput"> Password</label>
+            <input  id="passwordInput" name="password" type="password">
+            <label for="userRole"> User</label>
+            <input type="radio" name="role" id="userRole" value="user">
+            <label for="adminRole"> Admin </label>
+            <input type="radio" name="role" id="adminRole" value="admin">
+            <input type="submit" value="Add">
+        </form>
+        {{ if .error }}
+        <p> {{ .error }} </p>
+        {{ end }}
+
+        <form id="get-all-users" method="POST" action="/admin/getusers">
+            <input type="submit" value="Get All Users">
+        </form>
+        <form id="get-all-countries" method="POST" action="/admin/getcountries">
+            <input type="submit" value="Get All Countries">
+        </form>
+        <form id="get-all-operators" method="POST" action="/admin/getoperators">
+            <input type="submit" value="Get All Operators">
+        </form>
+        {{ if .users }}
+        <table>
+            {{ with .users}}
+                <tr> 
+                <td> UUID</td>
+                <td> Username</td>
+                <td> Role </td>
+                </tr>
+                {{ range . }}
+                <tr>
+                <td> {{ .UUID }}</td>
+                <td> {{ .Username }}</td>
+                <td> {{ .Role }} </td>
+                </tr>
+                {{ end }}
+            {{ end }}
+        </table>
+        {{ end }}
+
+        {{ if .countries }}
+        <table>
+            {{ with .countries}}
+                <tr> 
+                <td> Country Number Format</td>
+                <td> Country Code</td>
+                <td> Country Identifier </td>
+                <td> Country Code Length </td>
+                </tr>
+                {{ range . }}
+                <tr>
+                <td> {{ .CountryNumberFormat }}</td>
+                <td> {{ .CountryCode }}</td>
+                <td> {{ .CountryIdentifier }} </td>
+                <td> {{ .CountryCodeLength }} </td>
+                </tr>
+                {{ end }}
+            {{ end }}
+        </table>
+        {{ end }}
+
+        {{ if .operators }}
+        <table>
+            {{ with .operators}}
+                <tr> 
+                <td> Country Identifier </td>
+                <td> Prefix Format</td>
+                <td> MNO </td>
+                <td> Prefix Length</td>
+                </tr>
+                {{ range . }}
+                <tr>
+                <td> {{ .CountryIdentifier }}</td>
+                <td> {{ .PrefixFormat }}</td>
+                <td> {{ .MNO }} </td>
+                <td> {{ .PrefixLength }} </td>
+                </tr>
+                {{ end }}
+            {{ end }}
+        </table>
+        {{ end }}
+                
+    </body>
+</html>

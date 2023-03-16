@@ -33,7 +33,7 @@ func TestNativeRegisterCallCorrectInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	mockAuthService.EXPECT().RegisterNativeUser(jsonReq.Username, jsonReq.Password).Return(&resp,nil)
+	mockAuthService.EXPECT().RegisterNativeUser(jsonReq.Username, jsonReq.Password,"user").Return(&resp,nil)
 
 	router.ServeHTTP(recorder,req)
 	
@@ -125,7 +125,7 @@ func TestNativeRegisterCallDuplicateEmail(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	err := errs.NewUserAlreadyExistsError()
-	mockAuthService.EXPECT().RegisterNativeUser(jsonReq.Username, jsonReq.Password).Return(nil,err)
+	mockAuthService.EXPECT().RegisterNativeUser(jsonReq.Username, jsonReq.Password, "user").Return(nil,err)
 
 	router.ServeHTTP(recorder,req)
 	
