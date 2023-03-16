@@ -33,7 +33,7 @@ func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 
 	gin.SetMode(gin.TestMode)
 	ctx, router = gin.CreateTestContext(w)
-	router.POST("/lookup", lh.NumberLookup)
+	router.POST("/lookup", lh.NumberLookupApi)
 
 	router.GET("/refresh", ah.RefreshAccessToken)
 	router.GET("/logout", ah.LogOut)

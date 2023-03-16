@@ -383,6 +383,8 @@ func (a AuthHandler) LogOut(c *gin.Context) {
 	}
 	c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 	c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
+	session := sessions.Default(c)
+	session.Clear()
 	c.Redirect(http.StatusFound, c.Query("redirect"))
 }
 

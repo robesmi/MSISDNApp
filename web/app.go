@@ -66,15 +66,20 @@ func Start(){
 		c.Redirect(http.StatusTemporaryRedirect,"/login")
 	})
 
+	router.POST("/api/register", aph.HandleNativeRegisterCall)
+	router.POST("/api/login", aph.HandleNativeLoginCall)
+	router.POST("/api/refresh", aph.RefreshAccessTokenCall)
+	router.POST("/api/logout", aph.LogOutCall)
+
+	router.POST("/service/api/lookup", middleware.ValidateApiTokenUserSection, mh.NumberLookupApi)
+
 	authorized := router.Group("/service")
 	authorized.Use(middleware.ValidateTokenUserSection)
+	
 	{
 		authorized.GET("/lookup", mh.GetLookupPage)
-		authorized.POST("/api/lookup", mh.NumberLookup)
-		authorized.POST("/api/register", aph.HandleNativeRegisterCall)
-		authorized.POST("/api/login", aph.HandleNativeLoginCall)
-		authorized.POST("/api/refresh", aph.RefreshAccessTokenCall)
-		authorized.POST("/api/logout", aph.LogOutCall)
+		authorized.POST("/lookup", mh.NumberLookup)
+		
 	}
 
 	adminGroup := router.Group("/admin")

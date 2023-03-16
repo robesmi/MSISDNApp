@@ -5,65 +5,34 @@
 </head>
 
 <body>
-
     <div>
-        <a href="/logout"> Log Out</a>
+        <a href="/" id="homescreenlink"></a>
+    </div>
+    <div>
+        <a href="/logout" id="logoutlink"> Log Out</a>
     </div>
 
     <div>
+        <form method="POST" action="/service/lookup">
         <label for="msisdn-input"></label>
-        <input type="text" placeholder="+38977123456" id="msisdn-input">
+        <input type="text" placeholder="+38977123456" id="msisdn-input" name="number">
         <input type="submit" id="msisdn-input-submit"></input>
+        </form>
     </div>
 
-
-
-
-
-
-
-
+    {{ if .error }}
+        <p> Error: {{ .error }} </p>
+    {{ end }}
+    {{ if .mno  }}
+        <p> MNO: {{ .mno }} </p>
+        <p> Country Code: {{ .cc }} </p>
+        <p> Subscriber Number: {{ .sn }} </p>
+        <p> Country Identifier: {{ .ci }} </p>
+    {{ end }}
     <script
     src="https://code.jquery.com/jquery-3.6.3.js"
     integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
     crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie/dist/js.cookie.min.js"></script>
-    <script>
-        $( document ).ready(function(){
-            $("#msisdn-input-submit").click( function(){
-                var number = $("#msisdn-input").val()
-                var data = { "number": number }
-                fetch("http://localhost:8080/service/api/lookup",{
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer" + Cookies.get("access_token"),
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                    .then(function(jsonResponse) {  
-
-                    if ($(".result-wrapper").length > 0){
-                        $(".result-wrapper").remove()
-                    }
-
-                    const resultWrapper = document.createElement("div")
-                    resultWrapper.classList.add("result-wrapper")
-                    for(var key in jsonResponse){
-                        var pNode = document.createElement('p')
-                        var resultNode = document.createTextNode(key + ": " + jsonResponse[key] + "\n")
-                        pNode.appendChild(resultNode)
-                        resultWrapper.appendChild(pNode)
-                    }
-                    document.body.appendChild(resultWrapper)
-                });
-            })
-        
-        })
-        
-    </script>
 </body>
 </html>

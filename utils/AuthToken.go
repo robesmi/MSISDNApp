@@ -86,9 +86,7 @@ func ValidateAccessToken(token string) (jwt.MapClaims,error){
 		return key, nil
 	})
 
-	if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && parsedToken.Valid{
-		return claims, nil
-	}else if ve, ok := err.(*jwt.ValidationError); ok{
+	if ve, ok := err.(*jwt.ValidationError); ok{
 		if ve.Errors&jwt.ValidationErrorMalformed != 0{
 			return nil, errs.NewMalformedTokenError()
 		}else if ve.Errors&jwt.ValidationErrorExpired!= 0{
@@ -96,10 +94,12 @@ func ValidateAccessToken(token string) (jwt.MapClaims,error){
 		}else {
 			return nil, errs.NewUnexpectedError(ve.Error())
 		}
-	}else{
+	}else if err != nil{
 		return nil, errs.NewUnexpectedError(ve.Error())
+	}else if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && parsedToken.Valid{
+		return claims, nil
 	}
-	
+	return nil, errs.NewExpiredTokenError()
 }
 
 // ValidateRefreshToken takes a jwt refresh token as input and validates it. Returns a jwt.MapClaims of the user uuid or

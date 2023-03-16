@@ -42,7 +42,9 @@ func ValidateTokenUserSection(c *gin.Context){
 					refresh_token,err = c.Cookie("refresh_token")
 					if err != nil{
 						log.Println("Access cookie with no refresh cookie request received")
-						c.Redirect(http.StatusFound, "login")
+						c.SetCookie("access_token", "", 0,"/","localhost",false,true)
+						c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
+						c.Redirect(http.StatusFound, "/login")
 						c.Abort()
 						return
 					}
@@ -150,4 +152,60 @@ func ValidateTokenAdminSection(c *gin.Context){
 			return
 		}
 		
+}
+
+func ValidateApiTokenUserSection(c *gin.Context){
+	//Get the token either from authorization header or cookie
+	var access_token string
+	authorizationHeader := c.Request.Header.Get("Authorization")
+	fields := strings.Fields(authorizationHeader)
+
+	if len(fields) != 0 && fields[0] == "Bearer" {
+		access_token = fields[1]
+	}
+	// If there's no token in either, kick user back
+	if access_token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "No auth token",
+		})
+		c.Abort()
+		return
+	}
+	
+	// Check whether the token is valid
+	var claims jwt.MapClaims
+	var err error
+	claims, err = utils.ValidateAccessToken(access_token)
+	if err != nil{
+		if _,ok := err.(*errs.ExpiredTokenError); ok{
+			// Redirect to refresh handler
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Authorization token expired",
+			})
+			c.Abort()
+			return
+
+		}else{
+			log.Println("Token error " + err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Internal error",
+			})
+			c.Abort()
+			return
+		}
+	}
+	
+	// Check if token contains appropriate role
+	role := claims["role"]
+	if role == "user"{
+		c.Next()
+		return
+	}else{
+		c.JSON(http.StatusBadRequest,gin.H{
+			"error":"Invalid access token, reauthorize.",
+		})
+		c.Abort()
+		return
+	}
+	
 }
