@@ -16,6 +16,10 @@ type LookupRequest struct{
 	Number string `json:"number" xml:"number"`
 }
 
+func (msh MSISDNLookupHandler) GetMainPage(c *gin.Context){
+	c.HTML(http.StatusOK, "home.html", nil)
+}
+
 func (msh MSISDNLookupHandler) GetLookupPage(c *gin.Context){
 	c.HTML(http.StatusOK, "index.html",nil)
 }

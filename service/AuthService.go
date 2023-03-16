@@ -211,7 +211,6 @@ func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginRes
 		AccessToken: accessToken,
 		RefreshToken: refreshToken,
 	}
-
 	return &response, nil
 } 
 

@@ -26,13 +26,12 @@ func Start(){
 	aurepo := repository.NewAuthRepository(dbClient)
 	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo)}
 	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo)}
+	aph := handlers.AuthApiHandler{Service: service.ReturnAuthService(aurepo)}
 
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
 	
-	router.GET("/", func(c *gin.Context){
-		c.Redirect(http.StatusMovedPermanently, "/login")
-	})
+	router.GET("/", mh.GetMainPage)
 	
 	store := cookie.NewStore([]byte("secret"))
   	router.Use(sessions.Sessions("mysession", store))
@@ -72,6 +71,10 @@ func Start(){
 	{
 		authorized.GET("/lookup", mh.GetLookupPage)
 		authorized.POST("/api/lookup", mh.NumberLookup)
+		authorized.POST("/api/register", aph.HandleNativeRegisterCall)
+		authorized.POST("/api/login", aph.HandleNativeLoginCall)
+		authorized.POST("/api/refresh", aph.RefreshAccessTokenCall)
+		authorized.POST("/api/logout", aph.LogOutCall)
 	}
 
 	adminGroup := router.Group("/admin")

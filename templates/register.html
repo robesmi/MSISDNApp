@@ -28,22 +28,26 @@
    <form action="/register" method="POST">
         {{ if .prevUsername }}
         <label>Email</label>
-        <input type="text" value="{{ .prevUsername }}" name="username">
+        <input type="text" value="{{ .prevUsername }}" name="username" id="usernameinput">
         {{ else }}
         <label>Email</label>
-        <input type="text" name="username">
+        <input type="text" name="username" id="usernameinput">
         {{ end }}
         {{ if .prevPassword }}
         <label>Password</label>
-        <input type="password" value="{{ .prevPassword }}" name="password">
+        <input type="password" value="{{ .prevPassword }}" name="password" id="passwordinput">
         {{ else }}
         <label>Password</label>
-        <input type="password" name="password">
+        <input type="password" name="password" id="passwordinput">
         {{ end }}
-        <input type="submit" value="Login">
+        <input type="submit" value="Register" id="registersubmit">
     </form>
     {{ if  .error}}
     <div class="error">{{ .error }}</div>
     {{ end }}
+
+    <div>
+        <a href="/login">Log in instead </a>
+    </div>
     </body>
 </html>

@@ -43,7 +43,7 @@ func (a AuthApiHandler) HandleNativeRegisterCall(c *gin.Context){
 	}
 
 	// Using a negative password regex because golang regex does not support lookahead
-	// At least 8 characters, must contain one uppercase character, 1 lowercase and 1 number
+	// At least 8 characters, must contain 1 uppercase character, 1 lowercase character, 1 special character and 1 number
 	passwordRegex := regexp.MustCompile(`^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$`)
 		if passwordRegex.MatchString(login.Password){
 		c.JSON(http.StatusBadRequest, gin.H{

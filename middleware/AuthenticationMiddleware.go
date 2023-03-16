@@ -25,8 +25,7 @@ func ValidateTokenUserSection(c *gin.Context){
 			}
 			// If there's no token in either, kick user back
 			if access_token == "" {
-				log.Println("No access token request")
-				c.Redirect(http.StatusTemporaryRedirect, "/login")
+				c.Redirect(http.StatusFound, "/login")
 				c.Abort()
 				return
 			}
@@ -57,11 +56,12 @@ func ValidateTokenUserSection(c *gin.Context){
 						return
 					}
 					// Redirect to refresh handler
-					c.Redirect(http.StatusTemporaryRedirect,"/refresh?redirect=" + c.FullPath())
+					c.Redirect(http.StatusFound,"/refresh?redirect=" + c.FullPath())
 					c.Abort()
 					return
 	
 				}else{
+					log.Println("Token error " + err.Error())
 					c.Redirect(http.StatusFound, "/login")
 					c.Abort()
 					return
@@ -72,10 +72,8 @@ func ValidateTokenUserSection(c *gin.Context){
 			role := claims["role"]
 			if role == "user"{
 				c.Next()
-				log.Println("User role request authenticated")
 				return
 			}else{
-				log.Println("User role request unauthenticated")
 				c.Redirect(http.StatusFound, "/?error=Unauthorized")
 				c.Abort()
 				return
@@ -145,10 +143,8 @@ func ValidateTokenAdminSection(c *gin.Context){
 		// Check if token has appropriate role
 		role := claims["role"]
 		if role == "admin"{
-			log.Println("Admin role request authenticated")
 			c.Next()
 		}else{
-			log.Println("Admin role request unauthenticated")
 			c.Redirect(http.StatusTemporaryRedirect, "/?error=Unauthorized")
 			c.Abort()
 			return

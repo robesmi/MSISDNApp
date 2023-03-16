@@ -5,11 +5,24 @@
 </head>
 
 <body>
+
+    <div>
+        <a href="/logout"> Log Out</a>
+    </div>
+
     <div>
         <label for="msisdn-input"></label>
         <input type="text" placeholder="+38977123456" id="msisdn-input">
         <input type="submit" id="msisdn-input-submit"></input>
     </div>
+
+
+
+
+
+
+
+
     <script
     src="https://code.jquery.com/jquery-3.6.3.js"
     integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
@@ -33,17 +46,17 @@
                 })
                     .then(function(jsonResponse) {  
 
-                    if ($(".resultWrapper").length > 0){
-                        $(".resultWrapper").remove()
+                    if ($(".result-wrapper").length > 0){
+                        $(".result-wrapper").remove()
                     }
 
                     const resultWrapper = document.createElement("div")
-                    resultWrapper.classList.add("resultWrapper")
+                    resultWrapper.classList.add("result-wrapper")
                     for(var key in jsonResponse){
+                        var pNode = document.createElement('p')
                         var resultNode = document.createTextNode(key + ": " + jsonResponse[key] + "\n")
-                        var br = document.createElement("br")
-                        resultWrapper.appendChild(resultNode)
-                        resultWrapper.appendChild(br)
+                        pNode.appendChild(resultNode)
+                        resultWrapper.appendChild(pNode)
                     }
                     document.body.appendChild(resultWrapper)
                 });
@@ -51,6 +64,6 @@
         
         })
         
-</script>
+    </script>
 </body>
 </html>

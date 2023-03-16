@@ -124,7 +124,7 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
-	c.Redirect(http.StatusTemporaryRedirect,"service/lookup")
+	c.Redirect(http.StatusFound,"/")
 }
 
 // HandleNativeLogin will log in the users that choose to use a local account
@@ -177,11 +177,7 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"access_token" : loginResp.AccessToken,
-		"refresh_token" : loginResp.RefreshToken,
-	})
+	c.Redirect(http.StatusFound, "/")
 }
 
 // HandleGoogleCode receives the ID token from google's redirect and registers/logs in
@@ -387,7 +383,7 @@ func (a AuthHandler) LogOut(c *gin.Context) {
 	}
 	c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 	c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
-	c.Redirect(http.StatusTemporaryRedirect, c.Query("redirect"))
+	c.Redirect(http.StatusFound, c.Query("redirect"))
 }
 
 func randToken() string {
