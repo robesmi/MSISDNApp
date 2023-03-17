@@ -35,6 +35,20 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 	return m.recorder
 }
 
+// EditUserById mocks base method.
+func (m *MockAuthService) EditUserById(arg0, arg1, arg2, arg3 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EditUserById", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EditUserById indicates an expected call of EditUserById.
+func (mr *MockAuthServiceMockRecorder) EditUserById(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditUserById", reflect.TypeOf((*MockAuthService)(nil).EditUserById), arg0, arg1, arg2, arg3)
+}
+
 // GetAllUsers mocks base method.
 func (m *MockAuthService) GetAllUsers() (*[]model.User, error) {
 	m.ctrl.T.Helper()
@@ -48,6 +62,21 @@ func (m *MockAuthService) GetAllUsers() (*[]model.User, error) {
 func (mr *MockAuthServiceMockRecorder) GetAllUsers() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUsers", reflect.TypeOf((*MockAuthService)(nil).GetAllUsers))
+}
+
+// GetUserById mocks base method.
+func (m *MockAuthService) GetUserById(arg0 string) (*model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserById", arg0)
+	ret0, _ := ret[0].(*model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserById indicates an expected call of GetUserById.
+func (mr *MockAuthServiceMockRecorder) GetUserById(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockAuthService)(nil).GetUserById), arg0)
 }
 
 // LogOutUser mocks base method.
@@ -137,4 +166,18 @@ func (m *MockAuthService) RegisterNativeUser(arg0, arg1, arg2 string) (*dto.Logi
 func (mr *MockAuthServiceMockRecorder) RegisterNativeUser(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNativeUser", reflect.TypeOf((*MockAuthService)(nil).RegisterNativeUser), arg0, arg1, arg2)
+}
+
+// RemoveUserById mocks base method.
+func (m *MockAuthService) RemoveUserById(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUserById", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUserById indicates an expected call of RemoveUserById.
+func (mr *MockAuthServiceMockRecorder) RemoveUserById(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserById", reflect.TypeOf((*MockAuthService)(nil).RemoveUserById), arg0)
 }

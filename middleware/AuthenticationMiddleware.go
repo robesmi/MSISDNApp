@@ -41,7 +41,6 @@ func ValidateTokenUserSection(c *gin.Context){
 					var refresh_token string
 					refresh_token,err = c.Cookie("refresh_token")
 					if err != nil{
-						log.Println("Access cookie with no refresh cookie request received")
 						c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 						c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
 						c.Redirect(http.StatusFound, "/login")
@@ -98,8 +97,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 		}
 		// If there's no token in either, kick user back
 		if access_token == "" {
-			log.Println("No access token request")
-			c.Redirect(http.StatusTemporaryRedirect, "/login")
+			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
 		}
@@ -115,7 +113,6 @@ func ValidateTokenAdminSection(c *gin.Context){
 				var refresh_token string
 				refresh_token,err = c.Cookie("refresh_token")
 				if err != nil{
-					log.Println("Access cookie with no refresh cookie request received")
 					c.Redirect(http.StatusFound, "login")
 					c.Abort()
 					return

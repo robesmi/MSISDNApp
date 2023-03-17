@@ -36,6 +36,9 @@ type AuthService interface {
 	LogOutUser(string) (error)
 	// Take a guess
 	GetAllUsers() (*[]model.User, error)
+	GetUserById(string) (*model.User, error)
+	EditUserById(string, string, string, string) (error)
+	RemoveUserById(string) (error)
 
 }
 var (
@@ -100,7 +103,7 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 	}
 
 	// Create new tokens and update the refresh token in db
-	accessToken , atErr := createAccessToken("user")
+	accessToken , atErr := createAccessToken(user.Role)
 	if atErr != nil{
 		return nil, atErr
 	}
@@ -236,4 +239,43 @@ func (s DefaultAuthService) GetAllUsers() (*[]model.User, error){
 		return nil, err
 	}
 	return users, nil
+}
+
+func (s DefaultAuthService) GetUserById(id string) (*model.User, error){
+
+	user,err := s.repository.GetUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+
+}
+
+func (s DefaultAuthService) EditUserById(id string, username string, password string, role string) (error) {
+	var encodedPassword []byte
+	var genErr error
+	if password != "" {
+		encodedPassword, genErr = bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
+		if genErr != nil{
+			return errs.NewUnexpectedError(genErr.Error())
+		}
+	}
+
+	if genErr != nil{
+		return errs.NewUnexpectedError(genErr.Error())
+	}
+	updateErr := s.repository.EditUserById(id,username, string(encodedPassword), role)
+	if updateErr != nil {
+		return updateErr
+	}
+	return nil
+}
+
+func (s DefaultAuthService) RemoveUserById(id string) (error){
+
+	err := s.repository.RemoveUserById(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

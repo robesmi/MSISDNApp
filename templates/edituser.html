@@ -1,0 +1,39 @@
+<html>
+
+    <head>
+        <title> Edit User</title>
+    </head>
+
+    <body>
+        {{ with .user  }}
+        <form method="POST" action="/admin/edituser">
+            <input type="text" value="{{ .UUID }}" name="id" hidden>
+            <label for="username">Username:</label>
+            <input id="username" name="username" value="{{ .Username }}">
+
+            <label for="password">Password:</label>
+            <input id="password" name="username">
+            
+            {{ if eq .Role "user"}}
+            <label for="userRole">User</label>
+            <input type="radio" name="role" id="userRole" value="user" checked>
+            {{ else }}
+            <label for="userRole">User</label>
+            <input type="radio" name="role" id="userRole" value="user">
+            {{ end }}
+
+            {{ if eq .Role "admin"}}
+            <label for="adminRole">Admin</label>
+            <input type="radio" name="role" id="adminRole" value="admin" checked>
+            {{ else }}
+            <label for="adminRole">Admin</label>
+            <input type="radio" name="role" id="adminRole" value="admin">
+            {{ end }}
+
+            <input type="submit" value="Edit User">
+        </form>
+        {{ end }}
+
+    </body>
+
+</html>

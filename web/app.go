@@ -84,20 +84,23 @@ func Start(){
 		
 	}
 
-	router.GET("/admin/panel", adh.GetAdminPanelPage)
-
-	router.POST("/admin/adduser", adh.InsertNewUser)
-	router.POST("/admin/addcountry", adh.InsertNewCountry)
-	router.POST("/admin/addoperator", adh.InsertNewMobileOperator)
 	
-	router.POST("/admin/getusers", adh.GetAllUsers)
-	router.POST("/admin/getcountries", adh.GetAllCountries)
-	router.POST("/admin/getoperators", adh.GetAllMobileOperators)
 
 	adminGroup := router.Group("/admin")
 	adminGroup.Use(middleware.ValidateTokenAdminSection)
 	{
-		
+		adminGroup.GET("/panel", adh.GetAdminPanelPage)
+
+		adminGroup.POST("/adduser", adh.InsertNewUser)
+		adminGroup.POST("/edituserpanel", adh.EditUserPage)
+		adminGroup.POST("/edituser", adh.EditUser)
+		adminGroup.POST("/removeuser", adh.RemoveUser)
+		adminGroup.POST("/addcountry", adh.InsertNewCountry)
+		adminGroup.POST("/addoperator", adh.InsertNewMobileOperator)
+	
+		adminGroup.POST("/getusers", adh.GetAllUsers)
+		adminGroup.POST("/getcountries", adh.GetAllCountries)
+		adminGroup.POST("/getoperators", adh.GetAllMobileOperators)
 	}
 
 	//Starting up server

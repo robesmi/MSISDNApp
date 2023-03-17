@@ -34,6 +34,20 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+// EditUserById mocks base method.
+func (m *MockUserRepository) EditUserById(arg0, arg1, arg2, arg3 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EditUserById", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EditUserById indicates an expected call of EditUserById.
+func (mr *MockUserRepositoryMockRecorder) EditUserById(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EditUserById", reflect.TypeOf((*MockUserRepository)(nil).EditUserById), arg0, arg1, arg2, arg3)
+}
+
 // GetAllUsers mocks base method.
 func (m *MockUserRepository) GetAllUsers() (*[]model.User, error) {
 	m.ctrl.T.Helper()
@@ -105,6 +119,20 @@ func (m *MockUserRepository) RegisterNativeUser(arg0, arg1, arg2, arg3, arg4 str
 func (mr *MockUserRepositoryMockRecorder) RegisterNativeUser(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNativeUser", reflect.TypeOf((*MockUserRepository)(nil).RegisterNativeUser), arg0, arg1, arg2, arg3, arg4)
+}
+
+// RemoveUserById mocks base method.
+func (m *MockUserRepository) RemoveUserById(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUserById", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUserById indicates an expected call of RemoveUserById.
+func (mr *MockUserRepositoryMockRecorder) RemoveUserById(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserById", reflect.TypeOf((*MockUserRepository)(nil).RemoveUserById), arg0)
 }
 
 // UpdateRefreshToken mocks base method.

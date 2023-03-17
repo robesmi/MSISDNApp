@@ -17,7 +17,6 @@ func NewAuthRepository(client *sqlx.DB) UserRepositoryDb {
 	return UserRepositoryDb{client}
 }
 //go:generate mockgen -destination=../mocks/repository/mockUserRepository.go -package=repository github.com/robesmi/MSISDNApp/repository UserRepository
-
 type UserRepository interface {
 	// Can you figure out what this does?
 	GetAllUsers() (*[]model.User, error)
@@ -36,6 +35,8 @@ type UserRepository interface {
 	// UpdateRefreshToken takes a uuid and a refresh token and updates the user's
 	// refresh token, returning an error if unsuccessful
 	UpdateRefreshToken(string, string) error
+	EditUserById(string, string, string, string) (error)
+	RemoveUserById(string) (error)
 }
 
 func (db UserRepositoryDb) GetAllUsers() (*[]model.User, error){
@@ -111,6 +112,32 @@ func (db UserRepositoryDb) UpdateRefreshToken(uuid string, refreshToken string) 
 	_, refreshErr := db.client.Exec(sqlRefresh, refreshToken, uuid)
 	if refreshErr != nil{
 		return errs.NewUnexpectedError(refreshErr.Error())
+	}
+	return nil
+}
+
+func (db UserRepositoryDb) EditUserById(uuid string, username string, password string, role string) error {
+	var err error
+	if password != ""{
+		sqlEdit := "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?"
+		_, err = db.client.Exec(sqlEdit,username, password, role, uuid)
+	}else{
+		sqlEdit := "UPDATE users SET username = ?, role = ? WHERE id = ?"
+		_, err = db.client.Exec(sqlEdit,username, role, uuid)
+	}
+	
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+func (db UserRepositoryDb) RemoveUserById(uuid string) (error) {
+
+	sqlRemove := "DELETE FROM users WHERE id = ?"
+	_, err := db.client.Exec(sqlRemove, uuid)
+	if err != nil {
+		return err
 	}
 	return nil
 }
