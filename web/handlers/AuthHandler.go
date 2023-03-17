@@ -121,7 +121,7 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 		}
 	}
 
-	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.Redirect(http.StatusFound,"/")
@@ -164,6 +164,13 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 				"prevPassword": login.Password,
 			})
 			return
+		}else if _,ok := err.(*errs.UserNotFoundError); ok{
+			c.HTML(http.StatusBadRequest, "login.html", gin.H{
+				"error": "Email does not exist",
+				"prevUsername": login.Username,
+				"prevPassword": login.Password,
+			})
+			return
 		}else{
 			c.HTML(http.StatusBadRequest, "login.html", gin.H{
 				"error": "Internal error " + err.Error(),
@@ -174,7 +181,7 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 		}
 	}
 
-	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.Redirect(http.StatusFound, "/")
@@ -319,7 +326,7 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 		return
 	}
 
-	c.SetCookie("access_token", login.AccessToken, int(60 * 15),"/","localhost",false,true)
+	c.SetCookie("access_token", login.AccessToken, int(60 * 60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", login.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.JSON(http.StatusOK, gin.H{

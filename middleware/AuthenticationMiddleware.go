@@ -71,7 +71,7 @@ func ValidateTokenUserSection(c *gin.Context){
 			
 			// Check if token contains appropriate role
 			role := claims["role"]
-			if role == "user"{
+			if role == "user" || role == "admin"{
 				c.Next()
 				return
 			}else{

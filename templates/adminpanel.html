@@ -1,78 +1,149 @@
+<!doctype html>
 <html>
 
     <head>
-
-
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title> Admin panel</title>
     </head>
 
     <body>
+        {{block "header" .}}
 
-        <form id="add-user-panel" method="POST" action="/admin/adduser">
-            <label for="usernameInput"> Username </label>
-            <input id="usernameInput" name="username" type="text">
+        {{end}}
+        <div class="row">
+            <div class="col-md">
+                <div class="container vstack">
+                <form id="add-user-panel" method="POST" action="/admin/adduser">
+                    <div class="row">
+                        <div class="col-3">
+                            <label class="d-flex justify-content-center" for="usernameInput"> Username </label>
+                        </div>
+                        <div class="col-9 align-self-center">
+                            <input id="usernameInput" name="username" type="text">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <label class="d-flex justify-content-center" for="passwordInput"> Password</label>
+                        </div>
+                        <div class="col-9 align-self-center">
+                            <input id="passwordInput" name="password" type="password">
+                        </div>
+                    </div>
+                    <label for="userRole"> User</label>
+                    <input type="radio" name="role" id="userRole" value="user" checked>
 
-            <label for="passwordInput"> Password</label>
-            <input  id="passwordInput" name="password" type="password">
+                    <label for="adminRole"> Admin </label>
+                    <input type="radio" name="role" id="adminRole" value="admin">
 
-            <label for="userRole"> User</label>
-            <input type="radio" name="role" id="userRole" value="user" checked>
+                    <input type="submit" value="Add User">
+                </form>
+                </div>
+            </div>
 
-            <label for="adminRole"> Admin </label>
-            <input type="radio" name="role" id="adminRole" value="admin">
+            <div class="col-md">
 
-            <input type="submit" value="Add User">
-        </form>
+                <div class="container vstack">
 
-        <form id="add-country-panel" method="POST" action="/admin/addcountry">
-            <label for="countryFormat"> Country Number Format </label>
-            <input id="countryFormat" name="countryformat" type="text">
+                    <form id="add-country-panel" method="POST" action="/admin/addcountry">
 
-            <label for="countryCode"> Country Code</label>
-            <input  id="countryCode" name="countrycode" type="text">
+                        <div class="row">
 
-            <label for="ciInput">Country Identifier</label>
-            <input  id="ciInput" type="text" name="countryidentifier">
+                            <div class="col-3">
+                                <label for="countryFormat"> Country Number Format </label>
+                            </div>
 
-            <label for="ccLenInput" > Country Code Length</label>
-            <input id="ccLenInput" type="text" name="countrycodelength">
+                            <div class="col-9 align-self-center">
+                                <input id="countryFormat" name="countryformat" type="text">
+                            </div>
 
-            <input type="submit" value="Add Country">
-        </form>
-        
-        <form id="add-operator-panel" method="POST" action="/admin/addoperator">
-            <label for="operatorCiInput"> Country Identifier </label>
-            <input id="operatorCiInput" name="countryidentifier" type="text">
+                        </div>
 
-            <label for="operatorFormat"> Prefix Format</label>
-            <input  id="operatorFormat" name="prefixformat" type="text">
+                        <div class="row">
 
-            <label for="mnoInput"> MNO </label>
-            <input  id="mnoInput" type="text" name="mno">
+                            <div class="col-3">
+                                <label for="countryCode"> Country Code</label>
+                            </div>
 
-            <label for="prefixLen" > Prefix Length </label>
-            <input id="prefixLen" type="text" name="prefixlength">
+                            <div class="col-9 align-self-center">
+                                <input  id="countryCode" name="countrycode" type="text">
+                            </div>
 
-            <input type="submit" value="Add Operator">
-        </form>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-3">
+                                <label for="ciInput">Country Identifier</label>
+                            </div>
+                            
+                            <div class="col-9 align-self-center">
+                                <input  id="ciInput" type="text" name="countryidentifier">
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            
+                            <div class="col-3">
+                                <label for="ccLenInput" > Country Code Length</label>
+                            </div>
+
+                            <div class="col-9 align-self-center">
+                                <input id="ccLenInput" type="text" name="countrycodelength">
+                            </div>
+
+                        </div>
+
+                        <input type="submit" value="Add Country">
+
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md">
+                <form id="add-operator-panel" method="POST" action="/admin/addoperator">
+                    <label for="operatorCiInput"> Country Identifier </label>
+                    <input id="operatorCiInput" name="countryidentifier" type="text">
+
+                    <label for="operatorFormat"> Prefix Format</label>
+                    <input  id="operatorFormat" name="prefixformat" type="text">
+
+                    <label for="mnoInput"> MNO </label>
+                    <input  id="mnoInput" type="text" name="mno">
+
+                    <label for="prefixLen" > Prefix Length </label>
+                    <input id="prefixLen" type="text" name="prefixlength">
+
+                    <input type="submit" value="Add Operator">
+                </form>
+            </div>
+        </div>
         {{ if .error }}
         <p> {{ .error }} </p>
         {{ end }}
 
-        <form id="get-all-users" method="POST" action="/admin/getusers">
-            <input type="submit" value="Get All Users">
-        </form>
-
-        <form id="get-all-countries" method="POST" action="/admin/getcountries">
-            <input type="submit" value="Get All Countries">
-        </form>
-
-        <form id="get-all-operators" method="POST" action="/admin/getoperators">
-            <input type="submit" value="Get All Operators">
-        </form>
+        <div class="row">
+            <div class="col-md-2">
+                <form id="get-all-users" method="POST" action="/admin/getusers">
+                    <input type="submit" value="Get All Users">
+                </form>
+            </div>
+            <div class="col-md-2">
+                <form id="get-all-countries" method="POST" action="/admin/getcountries">
+                    <input type="submit" value="Get All Countries">
+                </form>
+            </div>
+            <div class="col-md-2">
+                <form id="get-all-operators" method="POST" action="/admin/getoperators">
+                    <input type="submit" value="Get All Operators">
+                </form>
+            </div>
+        </div>
 
         {{ if .users }}
-        <table>
+        <table class="table table-bordered">
             {{ with .users}}
                 <tr> 
                 <td> UUID</td>
@@ -105,7 +176,7 @@
         {{ end }}
 
         {{ if .countries }}
-        <table>
+        <table class="table table-bordered">
             {{ with .countries}}
                 <tr> 
                 <td> Country Number Format</td>
@@ -140,7 +211,7 @@
         {{ end }}
 
         {{ if .operators }}
-        <table>
+        <table class="table table-bordered">
             {{ with .operators}}
                 <tr> 
                 <td> Country Identifier </td>
@@ -174,5 +245,7 @@
         </table>
         {{ end }}
                 
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     </body>
 </html>

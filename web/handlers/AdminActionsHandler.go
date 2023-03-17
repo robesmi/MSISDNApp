@@ -111,7 +111,7 @@ func (adh AdminActionsHandler) EditUser(c *gin.Context){
 	editErr := adh.AuthService.EditUserById(editUser.UUID, editUser.Username, editUser.Password, editUser.Role)
 	if editErr != nil{
 		log.Println("Error editing user: " + editErr.Error())
-		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+		c.HTML(http.StatusBadRequest, "edituser.html", gin.H{
 			"error": "Internal Error: " + editErr.Error(),
 		})
 	}

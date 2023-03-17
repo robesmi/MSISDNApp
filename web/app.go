@@ -1,12 +1,13 @@
 package web
 
 import (
+	"log"
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/sessions"
-  	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/config"
@@ -75,36 +76,39 @@ func Start(){
 
 	router.POST("/service/api/lookup", middleware.ValidateApiTokenUserSection, mh.NumberLookupApi)
 
-	authorized := router.Group("/service")
-	authorized.Use(middleware.ValidateTokenUserSection)
+	userSection := router.Group("/service")
+	userSection.Use(middleware.ValidateTokenUserSection)
 	
 	{
-		authorized.GET("/lookup", mh.GetLookupPage)
-		authorized.POST("/lookup", mh.NumberLookup)
-		
+		userSection.GET("/lookup", mh.GetLookupPage)
+		userSection.POST("/lookup", mh.NumberLookup)
+	}
+
+	adminSection := router.Group("/admin")
+	adminSection.Use(middleware.ValidateTokenAdminSection)
+	{
+		adminSection.GET("/panel", adh.GetAdminPanelPage)
+
+		adminSection.POST("/adduser", adh.InsertNewUser)
+		adminSection.POST("/edituserpanel", adh.EditUserPage)
+		adminSection.POST("/edituser", adh.EditUser)
+		adminSection.POST("/removeuser", adh.RemoveUser)
+		adminSection.POST("/addcountry", adh.InsertNewCountry)
+		adminSection.POST("/addoperator", adh.InsertNewMobileOperator)
+	
+		adminSection.POST("/getusers", adh.GetAllUsers)
+		adminSection.POST("/getcountries", adh.GetAllCountries)
+		adminSection.POST("/getoperators", adh.GetAllMobileOperators)
 	}
 
 	
-
-	adminGroup := router.Group("/admin")
-	adminGroup.Use(middleware.ValidateTokenAdminSection)
-	{
-		adminGroup.GET("/panel", adh.GetAdminPanelPage)
-
-		adminGroup.POST("/adduser", adh.InsertNewUser)
-		adminGroup.POST("/edituserpanel", adh.EditUserPage)
-		adminGroup.POST("/edituser", adh.EditUser)
-		adminGroup.POST("/removeuser", adh.RemoveUser)
-		adminGroup.POST("/addcountry", adh.InsertNewCountry)
-		adminGroup.POST("/addoperator", adh.InsertNewMobileOperator)
-	
-		adminGroup.POST("/getusers", adh.GetAllUsers)
-		adminGroup.POST("/getcountries", adh.GetAllCountries)
-		adminGroup.POST("/getoperators", adh.GetAllMobileOperators)
-	}
-
 	//Starting up server
 	config, _ := config.LoadConfig()
+
+	_, err := ah.Service.RegisterNativeUser(config.AdminUsername, config.AdminPassword, "admin")
+	if err != nil{
+		log.Println("Error during init")
+	}
 	router.Run(":" + config.Port)
 }
 

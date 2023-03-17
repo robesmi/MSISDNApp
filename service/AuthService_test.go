@@ -102,7 +102,7 @@ func TestLoginNativeUserCorrectInput(t *testing.T) {
 	
 	inputEmail := "verycorrectemail@nice.com"
 	inputPassword := "12345Aa!"
-	encodedPassword, _ := bcrypt.GenerateFromPassword([]byte(inputPassword),bcrypt.MinCost)
+	encodedPassword, _ := bcrypt.GenerateFromPassword([]byte(inputPassword),bcrypt.DefaultCost)
 
 
 	expResponse := dto.LoginResponse{
@@ -340,5 +340,163 @@ func TestLogOutUser(t *testing.T){
 	//Assert
 	if err != nil{
 		t.Errorf("Error in TestLogOutuser:\n expected = %s\n got = %s", "nil",err)
+	}
+}
+
+func TestGetAllUsers(t *testing.T) {
+
+	//Arrange
+	teardown := setup(t)
+	defer teardown()
+
+	users := []model.User{
+		{
+			UUID: "1",
+			Username: "test1",
+			Password: "pw1",
+			Role: "user",
+		},
+		{
+			UUID: "2",
+			Username: "test2",
+			Password:  "pw2",
+			Role: "admin",
+		},
+	}
+
+	mockUserRepo.EXPECT().GetAllUsers().Return(&users,nil)
+
+	//Act
+	usersResponse, err := authService.GetAllUsers()
+	
+
+	//Assert
+	if err != nil{
+		t.Errorf("Error in TestGetAllUsers:\n expected = %s\n got = %s", "nil", err)
+	}
+	for k,v := range *usersResponse{
+		if v != users[k]{
+			t.Errorf("Error in TestGetAllUsers result mismatch:\n expected = %s\n got = %s",users[k], v)
+		}
+	}
+}
+
+func TestGetUserByIdValid(t *testing.T){
+
+	//Arrange
+	teardown := setup(t)
+	defer teardown()
+
+	user := model.User{
+		UUID: "1",
+		Username: "test1",
+		Password: "pw1",
+		Role: "user",
+	}
+
+	mockUserRepo.EXPECT().GetUserById(user.UUID).Return(&user,nil)
+
+	//Act
+
+	result, err := authService.GetUserById(user.UUID)
+
+	//Assert
+	
+	if err != nil{
+		t.Errorf("Error in TestGetUserbyIdValid:\n expected = %s\n got = %s", "nil", err)
+	}
+	if result.Username != user.Username{
+		t.Errorf("Error in TestGetUserbyIdValid result mismatch\n expected = %s\n got = %s", user.Username, result.Username)
+	}
+}
+
+func TestGetUserByIdInvalid(t *testing.T){
+
+	//Arrange
+	teardown := setup(t)
+	defer teardown()
+
+	mockUserRepo.EXPECT().GetUserById("gibberish").Return(nil, errs.NewUserNotFoundError())
+
+	//Act
+
+	_, err := authService.GetUserById("gibberish")
+
+	//Assert
+	
+	if err != err.(*errs.UserNotFoundError){
+		t.Errorf("Error in TestGetUserbyIdInvalid:\n expected = %s\n got = %s", "nil", err)
+	}
+
+}
+
+func TestEditUserByIdAndPassword(t *testing.T){
+
+	//Arrange
+	teardown := setup(t)
+	defer teardown()
+
+	user := model.User{
+		UUID: "1",
+		Username: "test1",
+		Password: "pw1",
+		Role: "user",
+	}
+
+	mockUserRepo.EXPECT().EditUserById(user.UUID, user.Username, gomock.Any() ,user.Role).Return(nil)
+
+	//Act
+
+	err := authService.EditUserById(user.UUID, user.Username, user.Password, user.Role)
+
+	//Assert
+	
+	if err != nil{
+		t.Errorf("Error in TestEditUserByIdAndPassword:\n expected = %s\n got = %s", "nil", err)
+	}
+
+}
+
+func TestEditUserByIdNoPassword(t *testing.T){
+
+	//Arrange
+	teardown := setup(t)
+	defer teardown()
+
+	user := model.User{
+		UUID: "1",
+		Username: "test1",
+		Password: "pw1",
+		Role: "user",
+	}
+
+	mockUserRepo.EXPECT().EditUserById(user.UUID, user.Username, "",user.Role).Return(nil)
+
+	//Act
+
+	err := authService.EditUserById(user.UUID, user.Username, "", user.Role)
+
+	//Assert
+	
+	if err != nil{
+		t.Errorf("Error in TestEditUserByIdNoPassword:\n expected = %s\n got = %s", "nil", err)
+	}
+
+}
+
+func TestRemoveUserById(t *testing.T){
+
+	//Arrange
+	teardown := setup(t)
+	defer teardown()
+	id := "1"
+	mockUserRepo.EXPECT().RemoveUserById(id).Return(nil)
+
+	//Act
+	err := authService.RemoveUserById(id)
+
+	//Assert
+	if err != nil{
+		t.Errorf("Error in TestRemoveuserById:\n expected = %s\n got = %s", "nil", err)
 	}
 }

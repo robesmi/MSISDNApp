@@ -95,7 +95,7 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 
 	user, lookupErr := s.repository.GetUserByUsername(username)
 	if lookupErr != nil {
-		return nil, nil
+		return nil, lookupErr
 	}
 	isPasswordInvalid := bcrypt.CompareHashAndPassword([]byte(user.Password),[]byte(password))
 	if isPasswordInvalid != nil{
