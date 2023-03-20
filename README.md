@@ -8,5 +8,10 @@ Takes a full MSISDN number as input and returns:
 - Country Identifier according to ISO 3166-1-alpha-2
 - Country Code
 
-Responds via JSON due to its wide compatability and readibility by many languages and APIs.  
-Can be called either via a POST call to its endpoint ```/lookup``` or via the html page.
+Features authentication with a native form or Oauth2 Social Login via Google/Github.  
+Can authenticate via API calls to ```/api/register``` or ```/api/login```.
+
+Responds with JSON due to its wide compatibility and readibility by many languages and APIs.  
+Can be called either via a POST call to its endpoint ```/service/api/lookup``` or the html page, restricted to users.
+
+Has a administrator page for viewing and managing the database.
