@@ -53,37 +53,41 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string,
 		return nil, errs.NewInvalidCredentialsError()
 	}
 
-	_ , err := s.repository.GetUserByUsername(username)
-	if _,ok := err.(*errs.UserNotFoundError); !ok {
-		return nil, errs.NewUserAlreadyExistsError()
-	}
-
-	newID := uuid.NewString()
+	resp , err := s.repository.GetUserByUsername(username)
+	if _,ok := err.(*errs.UserNotFoundError); ok {
+		newID := uuid.NewString()
 	
-	accessToken , atErr := createAccessToken(role)
-	if atErr != nil{
-		return nil, atErr
-	}
-	refreshToken, rtErr := createRefreshToken(newID)
-	if rtErr != nil {
-		return nil, rtErr
-	}
-	encodedPassword, genErr := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
-	if genErr != nil{
-		return nil, errs.NewUnexpectedError(genErr.Error())
-	}
-	regErr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), role, refreshToken)
-	if regErr != nil {
-		return nil, errs.NewUnexpectedError(regErr.Error())
-	}
+		accessToken , atErr := createAccessToken(role)
+		if atErr != nil{
+			return nil, atErr
+		}
+		refreshToken, rtErr := createRefreshToken(newID)
+		if rtErr != nil {
+			return nil, rtErr
+		}
+		encodedPassword, genErr := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
+		if genErr != nil{
+			return nil, errs.NewUnexpectedError(genErr.Error())
+		}
+		regErr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), role, refreshToken)
+		if regErr != nil {
+			return nil, errs.NewUnexpectedError(regErr.Error())
+		}
 
-	// If successful, returns the tokens
-	var response = dto.LoginResponse{
-		AccessToken: accessToken,
-		RefreshToken: refreshToken,
-	}
+		// If successful, returns the tokens
+		var response = dto.LoginResponse{
+			AccessToken: accessToken,
+			RefreshToken: refreshToken,
+		}
 
-	return &response, nil
+		return &response, nil
+		
+	}else if resp != nil{
+		return nil, errs.NewUserAlreadyExistsError()
+	}else {
+		return nil, errs.NewUnexpectedError(err.Error())
+	}
+	
 }
 
 
