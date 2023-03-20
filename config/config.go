@@ -13,7 +13,7 @@ type Config struct {
 	MySqlDriver           	string	`mapstructure:"MYSQL_DRIVER"`
 	MySqlSource           	string	`mapstructure:"MYSQL_SOURCE"`
 	Port                  	string	`mapstructure:"PORT"`
-	AdminUsername			string	`mapstructure:"Adminusername"`
+	AdminUsername			string	`mapstructure:"AdminUsername"`
 	AdminPassword			string	`mapstructure:"AdminPassword"`
 	AccessTokenPrivateKey 	string	`mapstructure:"AccessTokenPrivateKey"`
 	AccessTokenPublicKey  	string	`mapstructure:"AccessTokenPublicKey"`

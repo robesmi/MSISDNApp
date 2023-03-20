@@ -244,12 +244,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	c.SetCookie("access_token", login.AccessToken, int(60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", login.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"access_token" : login.AccessToken,
-		"refresh_token" : login.RefreshToken,
-	})
-	
+	c.Redirect(http.StatusFound, "/")
 }
 
 
@@ -329,11 +324,7 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 	c.SetCookie("access_token", login.AccessToken, int(60 * 60 * 15),"/","localhost",false,true)
 	c.SetCookie("refresh_token", login.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"access_token" : login.AccessToken,
-		"refresh_token" : login.RefreshToken,
-	})
+	c.Redirect(http.StatusFound, "/")
 }
 
 // RefreshAccessToken takes a refresh token, checks the validity and responds with new tokens on successful authentication

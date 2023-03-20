@@ -170,7 +170,7 @@ func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginRespons
 	}
 
 	// Create new tokens and update the refresh token in db
-	accessToken , atErr := createAccessToken("user")
+	accessToken , atErr := createAccessToken(user.Role)
 	if atErr != nil{
 		return nil, atErr
 	}

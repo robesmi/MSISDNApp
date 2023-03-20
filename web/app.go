@@ -107,7 +107,7 @@ func Start(){
 
 	_, err := ah.Service.RegisterNativeUser(config.AdminUsername, config.AdminPassword, "admin")
 	if err != nil{
-		log.Println("Error during init")
+		log.Println("Error during init " + err.Error())
 	}
 	router.Run(":" + config.Port)
 }
