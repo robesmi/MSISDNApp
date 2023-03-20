@@ -9,12 +9,13 @@ services:
     container_name: projectapp
     build:
       context: .
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       APP_PORT: 8080
     ports:
       - 8080:8080
-    depends_on:
-      - db
     networks:
       - msisdnapp
   db:
@@ -34,3 +35,8 @@ services:
       - "./docker/init.sql:/docker-entrypoint-initdb.d/1.sql"
     networks:
       - msisdnapp
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 10s
+      retries: 5

@@ -8,8 +8,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/robesmi/MSISDNApp/model"
 	dto "github.com/robesmi/MSISDNApp/model/dto"
-	errs "github.com/robesmi/MSISDNApp/model/errs"
 )
 
 // MockMSISDNService is a mock of MSISDNService interface.
@@ -35,12 +35,70 @@ func (m *MockMSISDNService) EXPECT() *MockMSISDNServiceMockRecorder {
 	return m.recorder
 }
 
+// AddNewCountry mocks base method.
+func (m *MockMSISDNService) AddNewCountry(arg0 *dto.CountryRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddNewCountry", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddNewCountry indicates an expected call of AddNewCountry.
+func (mr *MockMSISDNServiceMockRecorder) AddNewCountry(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewCountry", reflect.TypeOf((*MockMSISDNService)(nil).AddNewCountry), arg0)
+}
+
+// AddNewMobileOperator mocks base method.
+func (m *MockMSISDNService) AddNewMobileOperator(arg0 *dto.OperatorRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddNewMobileOperator", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddNewMobileOperator indicates an expected call of AddNewMobileOperator.
+func (mr *MockMSISDNServiceMockRecorder) AddNewMobileOperator(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewMobileOperator", reflect.TypeOf((*MockMSISDNService)(nil).AddNewMobileOperator), arg0)
+}
+
+// GetAllCountries mocks base method.
+func (m *MockMSISDNService) GetAllCountries() (*[]model.Country, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllCountries")
+	ret0, _ := ret[0].(*[]model.Country)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllCountries indicates an expected call of GetAllCountries.
+func (mr *MockMSISDNServiceMockRecorder) GetAllCountries() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCountries", reflect.TypeOf((*MockMSISDNService)(nil).GetAllCountries))
+}
+
+// GetAllMobileOperators mocks base method.
+func (m *MockMSISDNService) GetAllMobileOperators() (*[]model.MobileOperator, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllMobileOperators")
+	ret0, _ := ret[0].(*[]model.MobileOperator)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllMobileOperators indicates an expected call of GetAllMobileOperators.
+func (mr *MockMSISDNServiceMockRecorder) GetAllMobileOperators() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMobileOperators", reflect.TypeOf((*MockMSISDNService)(nil).GetAllMobileOperators))
+}
+
 // LookupMSISDN mocks base method.
-func (m *MockMSISDNService) LookupMSISDN(arg0 string) (*dto.NumberLookupResponse, *errs.AppError) {
+func (m *MockMSISDNService) LookupMSISDN(arg0 string) (*dto.NumberLookupResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LookupMSISDN", arg0)
 	ret0, _ := ret[0].(*dto.NumberLookupResponse)
-	ret1, _ := ret[1].(*errs.AppError)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 

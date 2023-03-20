@@ -17,17 +17,33 @@ import (
 var ctx *gin.Context
 var router *gin.Engine
 var lh MSISDNLookupHandler
-var mockService *service.MockMSISDNService
+var ah AuthHandler
+var aph AuthApiHandler
+var mockLookupService *service.MockMSISDNService
+var mockAuthService *service.MockAuthService
 
 func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 	
 	ctrl := gomock.NewController(t)
-	mockService = service.NewMockMSISDNService(ctrl)
-	lh = MSISDNLookupHandler{mockService}
+	mockLookupService = service.NewMockMSISDNService(ctrl)
+	mockAuthService = service.NewMockAuthService(ctrl)
+	lh = MSISDNLookupHandler{mockLookupService}
+	ah = AuthHandler{mockAuthService}
+	aph = AuthApiHandler{mockAuthService}
 
 	gin.SetMode(gin.TestMode)
 	ctx, router = gin.CreateTestContext(w)
-	router.POST("/lookup", lh.NumberLookup)
+	router.POST("/lookup", lh.NumberLookupApi)
+
+	router.GET("/refresh", ah.RefreshAccessToken)
+	router.GET("/logout", ah.LogOut)
+	router.POST("/oauth/google/callback", ah.HandleGoogleCode)
+	router.GET("/oauth/github/callback", ah.HandleGithubCode)
+
+	router.POST("/service/api/register", aph.HandleNativeRegisterCall)
+	router.POST("/service/api/login", aph.HandleNativeLoginCall)
+	router.POST("/service/api/refresh", aph.RefreshAccessTokenCall)
+	router.POST("/service/api/logout", aph.LogOutCall)
 
 
 	return func() {
@@ -46,6 +62,7 @@ func TestNumberLookup(t *testing.T) {
 		TestErrorMessage string
 		ExpectedReturnCode int
 		CallsService bool
+		ExpectsError bool
 
 	}{
 		{
@@ -59,8 +76,9 @@ func TestNumberLookup(t *testing.T) {
 			Name: 				"Test Negative input",
 			Input:				"-212315231",
 			TestErrorMessage: 	"Failed while testing negative input value",
-			ExpectedReturnCode:	http.StatusInternalServerError,
+			ExpectedReturnCode:	http.StatusOK,
 			CallsService:		true,
+			ExpectsError:		false,
 		},
 		{
 			Name:				"Test Invalid Number",
@@ -90,6 +108,7 @@ func TestNumberLookup(t *testing.T) {
 			TestErrorMessage: 	"Failed while testing valid number",
 			ExpectedReturnCode:	http.StatusOK,
 			CallsService: 		true,
+			ExpectsError:		false,
 		},
 		{
 			Name:				"Valid number with whitespace",
@@ -97,6 +116,15 @@ func TestNumberLookup(t *testing.T) {
 			TestErrorMessage: 	"Failed while testing valid number with whitespace",
 			ExpectedReturnCode: http.StatusOK,
 			CallsService: 		true,
+			ExpectsError:		false,
+		},
+		{
+			Name:				"Nonexistant number",
+			Input: 				"123456789",
+			TestErrorMessage: 	"Failed while testing valid number with whitespace",
+			ExpectedReturnCode: http.StatusBadRequest,
+			CallsService: 		true,
+			ExpectsError:		true,
 		},
 	}
 
@@ -109,7 +137,11 @@ func TestNumberLookup(t *testing.T) {
 			defer teardown()
 
 			if test.CallsService{
-				mockService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, &errs.AppError{ Code: test.ExpectedReturnCode})
+				if test.ExpectsError{
+					mockLookupService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, errs.NewUnexpectedError(""))
+				}else{
+					mockLookupService.EXPECT().LookupMSISDN(gomock.Any()).Return(nil, nil)
+				}
 			}
 			jsonReq := LookupRequest{
 				Number: test.Input,
@@ -117,11 +149,9 @@ func TestNumberLookup(t *testing.T) {
 			jsonVal,_ := json.Marshal(jsonReq)	
 
 			//Act
-			req, err := http.NewRequest(http.MethodPost,"/lookup",bytes.NewBuffer(jsonVal))
+			req:= httptest.NewRequest(http.MethodPost,"/lookup",bytes.NewBuffer(jsonVal))
 			req.Header.Set("Content-Type","application/json")
-			if err!= nil{
-				t.Fatalf("Could not make request in " + test.Name)
-			}
+			
 			router.ServeHTTP(recorder,req)
 
 			//Assert
