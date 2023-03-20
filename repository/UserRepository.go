@@ -16,6 +16,8 @@ type UserRepositoryDb struct {
 func NewAuthRepository(client *sqlx.DB) UserRepositoryDb {
 	return UserRepositoryDb{client}
 }
+
+
 //go:generate mockgen -destination=../mocks/repository/mockUserRepository.go -package=repository github.com/robesmi/MSISDNApp/repository UserRepository
 type UserRepository interface {
 	// Can you figure out what this does?
@@ -98,7 +100,7 @@ func (db UserRepositoryDb) RegisterNativeUser(uuid string, username string, pass
 
 func (db UserRepositoryDb) RegisterImportedUser(uuid string, username string, role string, refresh_token string)  error{
 
-	sqlNewUser := "INSERT INTO users VALUES (?,?, ?,?,?)"
+	sqlNewUser := "INSERT INTO users VALUES (?,?,?,?,?)"
 	_, execError := db.client.Exec(sqlNewUser, uuid, username,"", role, refresh_token)
 	if execError != nil{
 		return errs.NewUnexpectedError(execError.Error())
