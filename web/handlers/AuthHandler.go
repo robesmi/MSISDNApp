@@ -62,13 +62,29 @@ func init(){
 // GetRegisterPage returns the registration page that will be used for presenting
 // the available registration methods
 func(a AuthHandler) GetRegisterPage(c *gin.Context){
-	c.HTML(http.StatusOK, "register.html", nil)
+	redirectErr := c.Query("error")
+	if redirectErr == ""{
+		c.HTML(http.StatusOK, "register.html", nil)
+	}else if redirectErr == "AuthError"{
+		c.HTML(http.StatusOK, "register.html", gin.H{
+			"error" : "There was an error registering, please try again",
+		})
+	}
 }
 
 // GetLoginPage returns the login page that will be used for presenting the
 // available authentication methods
 func (a AuthHandler)GetLoginPage(c *gin.Context){
-	c.HTML(http.StatusOK, "login.html", nil)
+
+	redirectErr := c.Query("error")
+	if redirectErr == ""{
+		c.HTML(http.StatusOK, "login.html", nil)
+	}else if redirectErr == "AuthError"{
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"error" : "There was an error logging you in, please try again",
+		})
+	}
+	
 }
 
 // HandleNativeRegister gets a username/password combination from a form, performs needed validation and creates
@@ -195,7 +211,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	respData,readErr := io.ReadAll(c.Request.Body)
 	if readErr != nil{
 		log.Println("Error reading the google id token response: " + readErr.Error())
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.Redirect(http.StatusFound, "/register?error=AuthError")
 		return
 	}
 
@@ -208,15 +224,15 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	csrfCookie,err := c.Request.Cookie("g_csrf_token")
 	if err != nil{
 		log.Println("Error getting csrf protection cookie" + err.Error())
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 	if csrfToken != csrfCookie.Value{
 		log.Println("CSRF protection cookie and token do not match ")
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 	if config.GoogleClientID != clientId{
 		log.Println("ID Token client id does not match")
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 
 	// Extract the email from the ID token claims and use it to register/login the user
@@ -227,6 +243,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 
 	if fmt.Sprint(tokenClaims["iss"]) != "https://accounts.google.com"{
 		log.Println("Unauthorized google id token issuer, received: " + fmt.Sprint((tokenClaims["iss"])))
+		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 	login, appErr := a.Service.RegisterImportedUser(fmt.Sprint(tokenClaims["email"]))
 	if _,ok := appErr.(*errs.UserAlreadyExists); ok{

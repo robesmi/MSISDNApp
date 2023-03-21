@@ -84,10 +84,9 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string,
 		
 	}else if resp != nil{
 		return nil, errs.NewUserAlreadyExistsError()
-	}else {
-		return nil, errs.NewUnexpectedError(err.Error())
 	}
-	
+
+	return nil, errs.NewUnexpectedError(err.Error())
 }
 
 
@@ -133,7 +132,7 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 	if username == ""{
 		return nil, errs.NewInvalidCredentialsError()
 	}
-	_ , err := s.repository.GetUserByUsername(username)
+	resp , err := s.repository.GetUserByUsername(username)
 	if _, ok := err.(*errs.UserNotFoundError); ok {
 		
 		newID := uuid.NewString()
@@ -157,9 +156,11 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 		}
 
 		return &response, nil
-	}else{
+	}else if resp != nil{
 		return nil, errs.NewUserAlreadyExistsError()
 	}
+
+	return nil, errs.NewUnexpectedError(err.Error())
 }
 
 func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginResponse, error){
@@ -196,6 +197,7 @@ func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginRespons
 }
 
 func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginResponse, error){
+
 	user, err := s.repository.GetUserById(id)
 	if err != nil{
 		return nil, err
@@ -220,10 +222,12 @@ func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginRes
 		AccessToken: accessToken,
 		RefreshToken: refreshToken,
 	}
+
 	return &response, nil
 } 
 
 func (s DefaultAuthService) LogOutUser(id string) (error){
+
 	user, lookupErr := s.repository.GetUserById(id)
 	if lookupErr != nil{
 		return lookupErr
@@ -232,8 +236,8 @@ func (s DefaultAuthService) LogOutUser(id string) (error){
 	if updateErr != nil{
 		return updateErr
 	}
+	
 	return nil
-
 }
 
 func (s DefaultAuthService) GetAllUsers() (*[]model.User, error){

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -21,7 +22,20 @@ import (
 func Start(){
 
 	//Setup
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		return fmt.Sprintf("%s - [%s] \"%s %s %s %d \"%s\" %s\"\n",
+				param.ClientIP,
+				param.TimeStamp.Format(time.RFC1123),
+				param.Method,
+				param.Path,
+				param.Request.Proto,
+				param.StatusCode,
+				param.Request.UserAgent(),
+				param.ErrorMessage,
+		)
+	}))
+	router.Use(gin.Recovery())
 	dbClient := getStubDbClient()
 	msrepo := repository.NewMSISDNRepository(dbClient)
 	aurepo := repository.NewAuthRepository(dbClient)
@@ -100,6 +114,10 @@ func Start(){
 		adminSection.POST("/getcountries", adh.GetAllCountries)
 		adminSection.POST("/getoperators", adh.GetAllMobileOperators)
 	}
+
+	router.NoRoute( func(c *gin.Context){
+		c.HTML(http.StatusNotFound, "notfound.html",nil)
+	})
 
 	
 	//Starting up server
