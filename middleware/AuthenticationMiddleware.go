@@ -152,7 +152,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 }
 
 func ValidateApiTokenUserSection(c *gin.Context){
-	//Get the token either from authorization header or cookie
+	//Get the token from authorization header
 	var access_token string
 	authorizationHeader := c.Request.Header.Get("Authorization")
 	fields := strings.Fields(authorizationHeader)
@@ -160,7 +160,7 @@ func ValidateApiTokenUserSection(c *gin.Context){
 	if len(fields) != 0 && fields[0] == "Bearer" {
 		access_token = fields[1]
 	}
-	// If there's no token in either, kick user back
+	// If there's no token, kick user back
 	if access_token == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "No auth token",

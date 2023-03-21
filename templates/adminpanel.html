@@ -103,21 +103,63 @@
             </div>
 
             <div class="col-md">
-                <form id="add-operator-panel" method="POST" action="/admin/addoperator">
-                    <label for="operatorCiInput"> Country Identifier </label>
-                    <input id="operatorCiInput" name="countryidentifier" type="text">
 
-                    <label for="operatorFormat"> Prefix Format</label>
-                    <input  id="operatorFormat" name="prefixformat" type="text">
+                <div class="container vstack">
 
-                    <label for="mnoInput"> MNO </label>
-                    <input  id="mnoInput" type="text" name="mno">
+                    <form id="add-operator-panel" method="POST" action="/admin/addoperator">
 
-                    <label for="prefixLen" > Prefix Length </label>
-                    <input id="prefixLen" type="text" name="prefixlength">
+                        <div class="row">
 
-                    <input type="submit" value="Add Operator">
-                </form>
+                            <div class="col-3">
+                                <label for="operatorCiInput"> Country Identifier </label>
+                            </div>
+
+                            <div class="col-9 align-self-center">
+                                <input id="operatorCiInput" name="countryidentifier" type="text">
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-3">
+                                <label for="operatorFormat"> Prefix Format</label>
+                            </div>
+
+                            <div class="col-9 align-self-center">
+                                <input  id="operatorFormat" name="prefixformat" type="text">
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-3">
+                                <label for="mnoInput">MNO</label>
+                            </div>
+                            
+                            <div class="col-9 align-self-center">
+                                <input  id="mnoInput" type="text" name="mno">
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            
+                            <div class="col-3">
+                                <label for="prefixLen" > Prefix Length</label>
+                            </div>
+
+                            <div class="col-9 align-self-center">
+                                <input id="prefixLen" type="text" name="prefixlength">
+                            </div>
+
+                        </div>
+
+                        <input type="submit" value="Add Country">
+
+                    </form>
+                </div>
             </div>
         </div>
         {{ if .error }}

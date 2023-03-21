@@ -121,7 +121,7 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 		}
 	}
 
-	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 60 * 15),"/","localhost",false,true)
+	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 60 * 24),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.Redirect(http.StatusFound,"/")
@@ -181,7 +181,7 @@ func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 		}
 	}
 
-	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 60 * 15),"/","localhost",false,true)
+	c.SetCookie("access_token", loginResp.AccessToken, int(60 * 60 * 24),"/","localhost",false,true)
 	c.SetCookie("refresh_token", loginResp.RefreshToken, int(60 * 60 * 24),"/","localhost",false,true)
 
 	c.Redirect(http.StatusFound, "/")
@@ -238,6 +238,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 		}
 	}else if appErr != nil {
 		log.Println("Error with registering/logging a google user" + appErr.Error())
+		c.Redirect(http.StatusFound, "/register")
 		return
 	}
 
@@ -354,6 +355,7 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 	c.Redirect(http.StatusTemporaryRedirect, c.Query("redirect"))
 }
 
+// LogOut invalidates the request's auth tokens and cookies and removes the account's refresh token from db
 func (a AuthHandler) LogOut(c *gin.Context) {
 	refToken, err := c.Cookie("refresh_token")
 	if refToken == ""{
