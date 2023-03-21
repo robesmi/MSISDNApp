@@ -81,8 +81,11 @@ func TestRegisterNativeUserExistingEmail(t *testing.T) {
 	inputEmail := "correctduplicateemail@goodmail.com"
 	inputPassword := "12345Aa!"
 	expErr := errs.NewUserAlreadyExistsError()
+	testUser := model.User{
+		UUID: "1",
+	}
 
-	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(nil,expErr)
+	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(&testUser,expErr)
 
 	//Act
 	_, err := authService.RegisterNativeUser(inputEmail,inputPassword, "user")
@@ -188,8 +191,11 @@ func TestRegisterImportedUserDuplicateUser(t *testing.T) {
 	defer teardown()
 	
 	inputEmail := "duplicateemail@nice.com"
+	testUser := model.User{
+		UUID: "1",
+	}
 	
-	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(nil,nil)
+	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(&testUser,nil)
 	//Act
 	_, err := authService.RegisterImportedUser(inputEmail)
 

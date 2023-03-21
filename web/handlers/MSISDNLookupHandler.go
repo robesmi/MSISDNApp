@@ -4,12 +4,15 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/robesmi/MSISDNApp/service"
+	"github.com/rs/zerolog"
 )
 
 type MSISDNLookupHandler struct {
 	Service service.MSISDNService
+	Logger zerolog.Logger
 }
 type LookupRequest struct {
 	Number string `form:"number"`
@@ -56,10 +59,11 @@ func (msh MSISDNLookupHandler) NumberLookup(c *gin.Context){
 		}
 
 			// Execute service layer logic and receive a response
-			response, error := msh.Service.LookupMSISDN(number)
-			if error != nil{
+			response, lookupErr := msh.Service.LookupMSISDN(number)
+			if lookupErr != nil{
+				msh.Logger.Error().Err(lookupErr).Str("package","handlers").Str("context","NumberLookupApi").Msg("Error making lookup")
 				c.HTML(http.StatusBadRequest, "index.html", gin.H{
-					"error" : error.Error(),
+					"error" : lookupErr.Error(),
 				})
 				return
 			}
@@ -98,9 +102,10 @@ func (msh MSISDNLookupHandler) NumberLookupApi(c *gin.Context){
 		}
 
 			// Execute service layer logic and receive a response
-			response, error := msh.Service.LookupMSISDN(number)
-			if error != nil{
-				writeResponse(c,http.StatusBadRequest, map[string]string{ "error": error.Error()})
+			response, lookupErr := msh.Service.LookupMSISDN(number)
+			if lookupErr != nil{
+				msh.Logger.Error().Err(lookupErr).Str("package","handlers").Str("context","NumberLookupApi").Msg("Error making lookup")
+				writeResponse(c,http.StatusBadRequest, map[string]string{ "error": lookupErr.Error()})
 				return
 			}
 			

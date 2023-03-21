@@ -2,8 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"log"
-
+	
 	"github.com/jmoiron/sqlx"
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/errs"
@@ -47,7 +46,6 @@ func (db UserRepositoryDb) GetAllUsers() (*[]model.User, error){
 	sqlGet := "SELECT * FROM users"
 	err := db.client.Select(&allUsers, sqlGet)
 	if err != nil{
-		log.Println("Error in GetAllUsers: " + err.Error())
 		return nil, err
 	}
 	return &allUsers, nil

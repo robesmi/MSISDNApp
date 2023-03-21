@@ -11,18 +11,21 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/robesmi/MSISDNApp/config"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/utils"
+	"github.com/rs/zerolog"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
 
 type AuthHandler struct {
 	Service service.AuthService
+	Logger zerolog.Logger
 }
 
 type LoginForm struct {
@@ -147,6 +150,7 @@ func (a AuthHandler) HandleNativeRegister(c *gin.Context){
 func (a AuthHandler) HandleNativeLogin(c *gin.Context){
 	var login LoginForm
 	if err := c.Bind(&login); err != nil{
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleNativeLogin").Msg("Error binding login form")
 		log.Println("Error binding login form: " + err.Error())
 		return
 	}
@@ -210,7 +214,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	// Get the data from google's response
 	respData,readErr := io.ReadAll(c.Request.Body)
 	if readErr != nil{
-		log.Println("Error reading the google id token response: " + readErr.Error())
+		a.Logger.Error().Err(readErr).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Error reading the google id token response")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
 		return
 	}
@@ -223,26 +227,27 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	// Verify the fields
 	csrfCookie,err := c.Request.Cookie("g_csrf_token")
 	if err != nil{
-		log.Println("Error getting csrf protection cookie" + err.Error())
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Error getting csrf protection cookie")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 	if csrfToken != csrfCookie.Value{
-		log.Println("CSRF protection cookie and token do not match ")
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("CSRF protection cookie and token do not match")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 	if config.GoogleClientID != clientId{
-		log.Println("ID Token client id does not match")
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("ID Token client id does not match")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 
 	// Extract the email from the ID token claims and use it to register/login the user
 	tokenClaims, valErr := utils.ValidateGoogleIdToken(idJWT)
 	if valErr != nil{
-		log.Println(valErr.Error())
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Error validating google id token")
+		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 
 	if fmt.Sprint(tokenClaims["iss"]) != "https://accounts.google.com"{
-		log.Println("Unauthorized google id token issuer, received: " + fmt.Sprint((tokenClaims["iss"])))
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Unauthorized google id token issuer: received: " + fmt.Sprint((tokenClaims["iss"])))
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
 	}
 	login, appErr := a.Service.RegisterImportedUser(fmt.Sprint(tokenClaims["email"]))
@@ -254,7 +259,7 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 			return
 		}
 	}else if appErr != nil {
-		log.Println("Error with registering/logging a google user" + appErr.Error())
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Error with registering/logging a google user")
 		c.Redirect(http.StatusFound, "/register")
 		return
 	}
@@ -288,7 +293,7 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 	responseState := session.Get("state")
 	if responseState != c.Query("state"){
 		c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("invalid session state %s",responseState))
-		log.Printf("Error validating state in github login, expected %s got %s", responseState, c.Query("state"), )
+		a.Logger.Error().Str("package","handlers").Str("context","HandleGithubCode").Msg(fmt.Sprintf("Error validating state in github login, expected %s got %s",responseState, c.Query("state")))
 		return
 	}
 
@@ -311,7 +316,7 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 	userEmailsJson, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		c.Redirect(http.StatusTemporaryRedirect, "/register")
-		log.Println("Error reading github user emails json: " + readErr.Error())
+		a.Logger.Error().Err(readErr).Str("package","handlers").Str("context","HandleGithubCode").Msg("Error reading github user emails json")
 		return
 	}
 	var userEmails []GithubEmail
@@ -330,11 +335,11 @@ func (a AuthHandler) HandleGithubCode(c *gin.Context){
 		var newErr error
 		login, newErr = a.Service.LoginImportedUser(primaryEmail)
 		if newErr != nil{
-			log.Println("Error logging in imported user: " + newErr.Error())
+			a.Logger.Error().Err(newErr).Str("package","handlers").Str("context","HandleGithubCode").Msg("Error logging in imported user")
 			return
 		}
 	}else if appErr != nil{
-		log.Println("Error with github authentication: " + appErr.Error())
+		a.Logger.Error().Err(appErr).Str("package","handlers").Str("context","HandleGithubCode").Msg("Error with github authentication")
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
@@ -355,15 +360,15 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 	}
 	refClaims, valErr := utils.ValidateRefreshToken(refToken)
 	if valErr != nil{
-		log.Println("Error validating refresh token:" + valErr.Error())
+		a.Logger.Error().Err(valErr).Str("package","handlers").Str("context","RefreshAccessToken").Msg("Error validating refresh token")
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	resp, err := a.Service.RefreshTokens(fmt.Sprint(refClaims["id"]),refToken)
+	resp, refErr := a.Service.RefreshTokens(fmt.Sprint(refClaims["id"]),refToken)
 	if err != nil{
-		log.Println("Error refreshing access token: " + err.Error())
+		a.Logger.Error().Err(refErr).Str("package","handlers").Str("context","RefreshAccessToken").Msg("Error refreshing access token")
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
@@ -380,7 +385,7 @@ func (a AuthHandler) LogOut(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		log.Println("Error logging user out: " + err.Error())
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","LogOut").Msg("Error logging user out")
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}

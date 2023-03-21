@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/robesmi/MSISDNApp/mocks/service"
 	"github.com/robesmi/MSISDNApp/model/errs"
+	"github.com/rs/zerolog"
 )
 
 
@@ -27,8 +28,8 @@ func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 	ctrl := gomock.NewController(t)
 	mockLookupService = service.NewMockMSISDNService(ctrl)
 	mockAuthService = service.NewMockAuthService(ctrl)
-	lh = MSISDNLookupHandler{mockLookupService}
-	ah = AuthHandler{mockAuthService}
+	lh = MSISDNLookupHandler{mockLookupService, zerolog.Nop()}
+	ah = AuthHandler{mockAuthService, zerolog.Nop()}
 	aph = AuthApiHandler{mockAuthService}
 
 	gin.SetMode(gin.TestMode)

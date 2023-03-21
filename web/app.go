@@ -2,8 +2,8 @@ package web
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -16,6 +16,7 @@ import (
 	"github.com/robesmi/MSISDNApp/repository"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/web/handlers"
+	"github.com/rs/zerolog"
 )
 
 // Start initializes the needed route handling, connections between layers and starts the server
@@ -36,11 +37,15 @@ func Start(){
 		)
 	}))
 	router.Use(gin.Recovery())
+
+
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
 	dbClient := getStubDbClient()
 	msrepo := repository.NewMSISDNRepository(dbClient)
 	aurepo := repository.NewAuthRepository(dbClient)
-	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo)}
-	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo)}
+	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo), Logger: logger}
+	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo), Logger: logger}
 	aph := handlers.AuthApiHandler{Service: service.ReturnAuthService(aurepo)}
 	adh := handlers.AdminActionsHandler{AuthService: service.ReturnAuthService(aurepo), 
 		MSISDNService: service.NewMSISDNService(msrepo)}
@@ -125,7 +130,7 @@ func Start(){
 
 	_, err := ah.Service.RegisterNativeUser(config.AdminUsername, config.AdminPassword, "admin")
 	if err != nil{
-		log.Println("Error during init " + err.Error())
+		logger.Err(err).Str("package","web").Str("context","init").Msg("Error during init")
 	}
 	router.Run(":" + config.Port)
 }
