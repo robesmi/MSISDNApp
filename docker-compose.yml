@@ -37,6 +37,6 @@ services:
       - msisdnapp
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 10s
+      interval: 15s
+      timeout: 5s
       retries: 5

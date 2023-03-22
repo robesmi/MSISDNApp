@@ -363,13 +363,15 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 		a.Logger.Error().Err(valErr).Str("package","handlers").Str("context","RefreshAccessToken").Msg("Error validating refresh token")
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.Redirect(http.StatusFound, "/login")
 		return
 	}
 	resp, refErr := a.Service.RefreshTokens(fmt.Sprint(refClaims["id"]),refToken)
-	if err != nil{
+	if refErr != nil{
 		a.Logger.Error().Err(refErr).Str("package","handlers").Str("context","RefreshAccessToken").Msg("Error refreshing access token")
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
+		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
+		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
+		c.Redirect(http.StatusFound, "/login")
 		return
 	}
 	c.SetCookie("access_token", resp.AccessToken, int(60 * 15),"/","localhost",false,true)
@@ -393,6 +395,7 @@ func (a AuthHandler) LogOut(c *gin.Context) {
 	if valErr != nil{
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
+		
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
