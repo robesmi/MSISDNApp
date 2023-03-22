@@ -244,11 +244,13 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	if valErr != nil{
 		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Error validating google id token")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
+		return
 	}
 
 	if fmt.Sprint(tokenClaims["iss"]) != "https://accounts.google.com"{
 		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Unauthorized google id token issuer: received: " + fmt.Sprint((tokenClaims["iss"])))
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
+		return
 	}
 	login, appErr := a.Service.RegisterImportedUser(fmt.Sprint(tokenClaims["email"]))
 	if _,ok := appErr.(*errs.UserAlreadyExists); ok{

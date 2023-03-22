@@ -140,3 +140,17 @@ func NewRefreshTokenMismatch() *RefreshTokenMismatch{
 		Message: "Please log in again",
 	}
 }
+
+type TokenValidationError struct{
+	Message string
+}
+
+func(u TokenValidationError) Error() string{
+	return u.Message
+}
+
+func NewTokenValidationError(msg string) *TokenValidationError{
+	return &TokenValidationError{
+		Message: "Token validation error: " + msg,
+	}
+}

@@ -152,12 +152,43 @@ func ValidateGoogleIdToken(token string) (jwt.MapClaims, error){
 	jwks, err := keyfunc.Get(conf.GoogleJwkUrl,keyfunc.Options{})
 	if err != nil{
 		log.Fatalf("Failed to create JWK from url" + err.Error())
+		log.Println("Failed to create JWK from urk " + err.Error())
 	}
+
+	//Flag to check for clock skew issue due to jwt library not implementing tolerance now
+	iatFlag := 0
+
 	parsedToken, parseErr := jwt.Parse(token, jwks.Keyfunc)
 	if parseErr != nil {
-		log.Fatalf(parseErr.Error())
+
+		// If the exact error is not encountered, proceed with returning an error normally
+		if parseErr.Error() != "Token used before issued"{
+
+			validationErr, isValidationError := parseErr.(*jwt.ValidationError)
+			if !isValidationError {
+				log.Println("JWT parsing failed and is not a ValidationError")
+				return nil, errs.NewTokenValidationError(parseErr.Error())
+			}
+
+			hasIssuedAtValidationError := validationErr.Errors&jwt.ValidationErrorIssuedAt != 0
+			if !hasIssuedAtValidationError {
+				log.Println("JWT parsing failed, but is not a ValidationErrorIssuedAt")
+				return nil, errs.NewTokenValidationError(parseErr.Error())
+			}
+
+			// toggle ValidationErrorIssuedAt and check if it was the only validation error
+			remainingErrors := validationErr.Errors ^ jwt.ValidationErrorIssuedAt
+			if remainingErrors > 0 {
+				log.Println("JWT parsing failed, but has other errors besides ValidationErrorIssuedAt")
+				return nil, errs.NewTokenValidationError(parseErr.Error())
+			}
+
+		}else{
+			iatFlag = 1
+		}
+
 	}
-	if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && parsedToken.Valid{
+	if claims, valid := parsedToken.Claims.(jwt.MapClaims); valid && (parsedToken.Valid || iatFlag == 1){
 		return claims, nil
 	}else if ve, ok := err.(*jwt.ValidationError); ok{
 		if ve.Errors&jwt.ValidationErrorMalformed != 0{
