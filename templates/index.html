@@ -21,13 +21,17 @@
     </div>
 
     {{ if .error }}
-        <p> Error: {{ .error }} </p>
-    {{ end }}
+        <div id="result-wrapper">
+            <p> Error: {{ .error }} </p>
+        </div>
+        {{ end }}
     {{ if .mno  }}
-        <p> MNO: {{ .mno }} </p>
-        <p> Country Code: {{ .cc }} </p>
-        <p> Subscriber Number: {{ .sn }} </p>
-        <p> Country Identifier: {{ .ci }} </p>
+        <div id="result-wrapper">
+            <p> MNO: {{ .mno }} </p>
+            <p> Country Code: {{ .cc }} </p>
+            <p> Subscriber Number: {{ .sn }} </p>
+            <p> Country Identifier: {{ .ci }} </p>
+        </div>
     {{ end }}
     <script
     src="https://code.jquery.com/jquery-3.6.3.js"
