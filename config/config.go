@@ -15,6 +15,7 @@ type Config struct {
 	Port                  	string	`mapstructure:"PORT"`
 	AdminUsername			string	`mapstructure:"AdminUsername"`
 	AdminPassword			string	`mapstructure:"AdminPassword"`
+	Secret					string	`mapstructure:"Secret"`
 	AccessTokenPrivateKey 	string	`mapstructure:"AccessTokenPrivateKey"`
 	AccessTokenPublicKey  	string	`mapstructure:"AccessTokenPublicKey"`
 	RefreshTokenPrivateKey 	string	`mapstructure:"RefreshTokenPrivateKey"`

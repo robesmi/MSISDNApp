@@ -38,8 +38,12 @@ func Start(){
 	}))
 	router.Use(gin.Recovery())
 
-
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
+	config, err := config.LoadConfig()
+	if err != nil{
+		logger.Error().Err(err).Str("package","web").Str("context","Start").Msg("Error loading config")
+	}
 
 	dbClient := getStubDbClient()
 	msrepo := repository.NewMSISDNRepository(dbClient)
@@ -56,7 +60,8 @@ func Start(){
 	
 	router.GET("/", mh.GetMainPage)
 	
-	store := cookie.NewStore([]byte("secret"))
+	
+	store := cookie.NewStore([]byte(config.Secret))
   	router.Use(sessions.Sessions("mysession", store))
 
 	router.GET("/register", ah.GetRegisterPage)
@@ -126,22 +131,20 @@ func Start(){
 	}
 
 	router.NoRoute( func(c *gin.Context){
-		c.HTML(http.StatusNotFound, "notfound.html",nil)
+		c.HTML(http.StatusNotFound, "notfound.html", nil)
 	})
 
-	
-	//Starting up server
-	config, _ := config.LoadConfig()
-
-	_, err := ah.Service.RegisterNativeUser(config.AdminUsername, config.AdminPassword, "admin")
-	if err != nil{
-		logger.Err(err).Str("package","web").Str("context","init").Msg("Error during init")
+	// Initialize an admin user
+	_, regErr := ah.Service.RegisterNativeUser(config.AdminUsername, config.AdminPassword, "admin")
+	if regErr != nil{
+		logger.Err(regErr).Str("package","web").Str("context","init").Msg("Error during init")
 	}
+
+	//Starting up server
 	router.Run(":" + config.Port)
 }
 
 // getStubDbClient initializes the db connection and returns it to Start
-// Using mysql as a placeholder until a solid solution is decided on
 func getStubDbClient() *sqlx.DB{
 
 	config, appErr := config.LoadConfig()
