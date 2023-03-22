@@ -28,6 +28,8 @@ type MSISDNRepository interface{
 	AddNewMobileOperator(string, string, string, int) (error)
 	GetAllCountries() (*[]model.Country, error)
 	GetAllMobileOperators() (*[]model.MobileOperator, error)
+	RemoveCountry(string) (error)
+	RemoveOperator(string) (error)
 }
 
 
@@ -96,6 +98,26 @@ func (repo MSISDNRepositoryDb) AddNewMobileOperator(ci string, prefix string, mn
 
 	sqlAdd := "INSERT INTO mobile_operators VALUES (?,?,?,?)"
 	_, err := repo.db.Exec(sqlAdd, ci, prefix, mno, prefixLen)
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+func (repo MSISDNRepositoryDb) RemoveCountry(prefix string) (error){
+
+	sqlRemove := "DELETE FROM countries WHERE country_number_format = ?"
+	_, err := repo.db.Exec(sqlRemove, prefix)
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+func (repo MSISDNRepositoryDb) RemoveOperator(prefix string) (error){
+
+	sqlRemove := "DELETE FROM mobile_operators WHERE prefix_format = ?"
+	_, err := repo.db.Exec(sqlRemove, prefix)
 	if err != nil{
 		return err
 	}

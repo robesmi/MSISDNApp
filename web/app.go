@@ -48,7 +48,8 @@ func Start(){
 	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo), Logger: logger}
 	aph := handlers.AuthApiHandler{Service: service.ReturnAuthService(aurepo)}
 	adh := handlers.AdminActionsHandler{AuthService: service.ReturnAuthService(aurepo), 
-		MSISDNService: service.NewMSISDNService(msrepo)}
+		MSISDNService: service.NewMSISDNService(msrepo), 
+		Logger: logger,}
 
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
@@ -112,8 +113,12 @@ func Start(){
 		adminSection.POST("/edituserpanel", adh.EditUserPage)
 		adminSection.POST("/edituser", adh.EditUser)
 		adminSection.POST("/removeuser", adh.RemoveUser)
+
 		adminSection.POST("/addcountry", adh.InsertNewCountry)
+		adminSection.POST("/removecountry", adh.RemoveCountry)
+
 		adminSection.POST("/addoperator", adh.InsertNewMobileOperator)
+		adminSection.POST("/removeoperator", adh.RemoveOperator)
 	
 		adminSection.POST("/getusers", adh.GetAllUsers)
 		adminSection.POST("/getcountries", adh.GetAllCountries)

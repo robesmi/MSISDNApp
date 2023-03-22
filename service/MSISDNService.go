@@ -20,10 +20,12 @@ func NewMSISDNService(repository repository.MSISDNRepository) DefaultMSISDNServi
 
 type MSISDNService interface {
 	LookupMSISDN(string) (*dto.NumberLookupResponse, error)
-	AddNewCountry( *dto.CountryRequest) (error)
-	AddNewMobileOperator (*dto.OperatorRequest) (error)
+	AddNewCountry(*dto.CountryRequest) (error)
+	AddNewMobileOperator(*dto.OperatorRequest) (error)
 	GetAllCountries() (*[]model.Country, error)
 	GetAllMobileOperators() (*[]model.MobileOperator, error)
+	RemoveCountry(string) (error)
+	RemoveOperator(string) (error)
 }
 
 // LookupMSISDN takes a full MSISDN as a string and returns
@@ -96,6 +98,24 @@ func (s DefaultMSISDNService) AddNewMobileOperator( mobileReq *dto.OperatorReque
 	res := s.repo.AddNewMobileOperator(strings.ToLower(mobileReq.CountryIdentifier), mobileReq.PrefixFormat, mobileReq.MNO, prefLength)
 	if res != nil{
 		return res
+	}
+	return nil
+}
+
+func (s DefaultMSISDNService) RemoveCountry(prefix string) (error){
+
+	err := s.repo.RemoveCountry(prefix)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s DefaultMSISDNService) RemoveOperator(prefix string) (error){
+
+	err := s.repo.RemoveOperator(prefix)
+	if err != nil {
+		return err
 	}
 	return nil
 }

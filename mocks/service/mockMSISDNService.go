@@ -107,3 +107,31 @@ func (mr *MockMSISDNServiceMockRecorder) LookupMSISDN(arg0 interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LookupMSISDN", reflect.TypeOf((*MockMSISDNService)(nil).LookupMSISDN), arg0)
 }
+
+// RemoveCountry mocks base method.
+func (m *MockMSISDNService) RemoveCountry(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveCountry", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveCountry indicates an expected call of RemoveCountry.
+func (mr *MockMSISDNServiceMockRecorder) RemoveCountry(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveCountry", reflect.TypeOf((*MockMSISDNService)(nil).RemoveCountry), arg0)
+}
+
+// RemoveOperator mocks base method.
+func (m *MockMSISDNService) RemoveOperator(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveOperator", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveOperator indicates an expected call of RemoveOperator.
+func (mr *MockMSISDNServiceMockRecorder) RemoveOperator(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveOperator", reflect.TypeOf((*MockMSISDNService)(nil).RemoveOperator), arg0)
+}

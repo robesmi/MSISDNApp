@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"io"
-	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -12,11 +12,13 @@ import (
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/service"
+	"github.com/rs/zerolog"
 )
 
 type AdminActionsHandler struct {
 	AuthService service.AuthService
 	MSISDNService service.MSISDNService
+	Logger zerolog.Logger
 }
 
 func (adh AdminActionsHandler) GetAdminPanelPage(c *gin.Context){
@@ -28,7 +30,7 @@ func (adh AdminActionsHandler) InsertNewUser(c *gin.Context){
 	acReq := dto.AccountRequest{}
 	err := c.ShouldBind(&acReq)
 	if err != nil{
-		log.Printf("Error adding new user from admin panel: " + err.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","InsertNewUser").Msg("Error adding new user from admin panel")
 		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
 			"error": "Error adding new user" + err.Error(),
 		})
@@ -78,7 +80,7 @@ func (adh AdminActionsHandler) EditUserPage(c *gin.Context){
 	
 	userIdParam,err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Println("Error reading POST body: " + err.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","EditUserPage").Msg("Error reading POST body")
 		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
 			"error": "Internal Error: " + err.Error(),
 		})
@@ -103,14 +105,14 @@ func (adh AdminActionsHandler) EditUser(c *gin.Context){
 	var editUser model.User
 	err := c.ShouldBind(&editUser)
 	if err != nil{
-		log.Println("Error reading POST body: " + err.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","EditUser").Msg("Error reading POST body")
 		c.Redirect(http.StatusInternalServerError, "/admin/panel")
 		return
 	}
 	// Do the rest of the edit user logic here
 	editErr := adh.AuthService.EditUserById(editUser.UUID, editUser.Username, editUser.Password, editUser.Role)
 	if editErr != nil{
-		log.Println("Error editing user: " + editErr.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","EditUser").Msg("Error editing user")
 		c.HTML(http.StatusBadRequest, "edituser.html", gin.H{
 			"error": "Internal Error: " + editErr.Error(),
 		})
@@ -123,15 +125,24 @@ func (adh AdminActionsHandler) RemoveUser(c *gin.Context){
 
 	userIdParam,err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Println("Error reading POST body:" + err.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","RemoveUser").Msg("Error reading POST body")
 		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
 			"error": "Internal Error: " + err.Error(),
 		})
 		return
 	}
-	userId := strings.Split(string(userIdParam),"=")[1]
 	
-	rmErr := adh.AuthService.RemoveUserById(string(userId))
+	userId := strings.Split(string(userIdParam),"=")[1]
+	decodedId, escErr := url.QueryUnescape(userId)
+	if escErr != nil{
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","RemoveOperator").Msg("Error decoding uri characters")
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + err.Error(),
+		})
+		return
+	}
+	
+	rmErr := adh.AuthService.RemoveUserById(decodedId)
 	if rmErr != nil {
 		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
 			"error": "Internal Error: " + rmErr.Error(),
@@ -147,7 +158,7 @@ func (adh AdminActionsHandler) InsertNewCountry(c *gin.Context){
 	cReq := dto.CountryRequest{}
 	err := c.ShouldBind(&cReq)
 	if err != nil{
-		log.Printf("Error adding new country from admin panel: " + err.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","InsertNewCountry").Msg("Error adding new country from admin panel")
 		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
 			"error": "Error adding new country" + err.Error(),
 		})
@@ -204,12 +215,43 @@ func (adh AdminActionsHandler) GetAllCountries(c *gin.Context){
 	})
 }
 
+func (adh AdminActionsHandler) RemoveCountry(c *gin.Context){
+
+	countryPrefixParam, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","RemoveCountry").Msg("Error reading POST body")
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + err.Error(),
+		})
+		return
+	}
+	countryPrefix := strings.Split(string(countryPrefixParam),"=")[1]
+	decodedPrefix, escErr := url.QueryUnescape(countryPrefix)
+	if escErr != nil{
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","RemoveOperator").Msg("Error decoding uri characters")
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + err.Error(),
+		})
+		return
+	}
+	
+	rmErr := adh.MSISDNService.RemoveCountry(decodedPrefix)
+	if rmErr != nil {
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + rmErr.Error(),
+		})
+		return
+	}
+
+	c.Redirect( http.StatusFound, "/admin/panel")
+}
+
 func (adh AdminActionsHandler) InsertNewMobileOperator(c *gin.Context){
 
 	mnoReq := dto.OperatorRequest{}
 	err := c.ShouldBind(&mnoReq)
 	if err != nil{
-		log.Printf("Error adding new operator from admin panel: " + err.Error())
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","InsertNewMobileOperator").Msg("Error adding new operator from admin panel")
 		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
 			"error": "Error adding new operator" + err.Error(),
 		})
@@ -258,4 +300,34 @@ func (adh AdminActionsHandler) GetAllMobileOperators(c *gin.Context){
 	c.HTML(http.StatusOK, "adminpanel.html", gin.H{
 		"operators" : operatorsList,
 	})
+}
+
+func (adh AdminActionsHandler) RemoveOperator(c *gin.Context){
+
+	operatorPrefixParam, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","RemoveOperator").Msg("Error reading POST body")
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + err.Error(),
+		})
+		return
+	}
+	operatorPrefix := strings.Split(string(operatorPrefixParam),"=")[1]
+	decodedPrefix, escErr := url.QueryUnescape(operatorPrefix)
+	if escErr != nil{
+		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","RemoveOperator").Msg("Error decoding uri characters")
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + err.Error(),
+		})
+		return
+	}
+	rmErr := adh.MSISDNService.RemoveOperator(decodedPrefix)
+	if rmErr != nil {
+		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
+			"error": "Internal Error: " + rmErr.Error(),
+		})
+		return
+	}
+
+	c.Redirect( http.StatusFound, "/admin/panel")
 }
