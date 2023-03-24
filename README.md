@@ -1,6 +1,6 @@
 # MSISDNApp
 
-Starts with ```docker compose up```
+Populate the .env file in ```config/``` with your parameters, then start the app with ```docker compose up```
 
 Takes a full MSISDN number as input and returns:
 - MNO Identifier
