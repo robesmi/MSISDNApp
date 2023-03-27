@@ -1,32 +1,36 @@
 #!/usr/bin/env sh
 
-# Start vault
+set -ex
+
+# Does NOT work because 'vault server' command BLOCKS and further commands cannot be used without a second terminal
+# Automating this to be seamless in a docker enviroment is going to take time and alcohol
+init () {
 vault server -config ./vault/config/config.hcl
+vault operator init > /vault/file/keys
+}
 
-# Export values
-export VAULT_ADDR='https://0.0.0.0:8200'
-export VAULT_SKIP_VERIFY='true'
+unseal () {
+vault operator unseal $(grep 'Key 1:' /vault/file/keys | awk '{print $NF}')
+vault operator unseal $(grep 'Key 2:' /vault/file/keys | awk '{print $NF}')
+vault operator unseal $(grep 'Key 3:' /vault/file/keys | awk '{print $NF}')
+}
 
-# Parse unsealed keys
-mapfile -t keyArray < <( grep "Unseal Key " < generated_keys.txt  | cut -c15- )
+log_in () {
+   export ROOT_TOKEN=$(grep 'Initial Root Token:' /vault/file/keys | awk '{print $NF}')
+   vault login $ROOT_TOKEN
+}
 
-vault operator unseal ${keyArray[0]}
-vault operator unseal ${keyArray[1]}
-vault operator unseal ${keyArray[2]}
+create_token () {
+   vault token create -id $MY_VAULT_TOKEN
+}
 
-# Get root token
-mapfile -t rootToken < <(grep "Initial Root Token: " < generated_keys.txt  | cut -c21- )
-echo ${rootToken[0]} > root_token.txt
+if [ -s /vault/file/keys ]; then
+   unseal
+else
+   init
+   unseal
+   log_in
+   create_token
+fi
 
-export VAULT_TOKEN=${rootToken[0]}
-
-# Enable kv
-vault secrets enable -path=kv-v2 kv-v2
-
-# Enable userpass and add default user
-vault auth enable userpass
-vault policy write vault-policy vault-policy.hcl
-vault write auth/userpass/users/admin password=${SECRET_PASS} policies=vault-policy
-
-# Add test value to my-secret
-vault kv put kv/my-secret my-value=verysecret
+vault status > /vault/file/status
