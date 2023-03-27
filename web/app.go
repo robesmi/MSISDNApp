@@ -17,12 +17,13 @@ import (
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/web/handlers"
 	"github.com/rs/zerolog"
+	vault "github.com/hashicorp/vault/api"
 )
 
 // Start initializes the needed route handling, connections between layers and starts the server
 func Start(){
 
-	//Setup
+	//Setting up gin router, recovery and logging middleware
 	router := gin.New()
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d \"%s\" %s\"\n",
@@ -43,6 +44,28 @@ func Start(){
 	config, err := config.LoadConfig()
 	if err != nil{
 		logger.Error().Err(err).Str("package","web").Str("context","Start").Msg("Error loading config")
+	}
+
+	vault_config := vault.DefaultConfig()
+
+	vAddr, set := os.LookupEnv("VAULT_ADDR")
+	if !set{
+		logger.Error().Msg("VAULT_ADDR is not set")
+	}else{
+		vault_config.Address = vAddr
+
+	}
+
+	client, vaultErr  := vault.NewClient(vault_config)
+	if vaultErr != nil {
+		logger.Error().Err(vaultErr).Str("package","web").Str("context","Start").Msg("Error starting vault client")
+	}
+	
+	val,ok := os.LookupEnv("VAULT_TOKEN")
+	if !ok {
+		logger.Error().Msg("VAULT_TOKEN is not set")
+	}else{
+		client.SetToken(val)
 	}
 
 	dbClient := getStubDbClient()
