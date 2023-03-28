@@ -2,10 +2,8 @@
 
 set -ex
 
-# Does NOT work because 'vault server' command BLOCKS and further commands cannot be used without a second terminal
-# Automating this to be seamless in a docker enviroment is going to take time and alcohol
+# Only executed on the very first initalization of a vault and saves the keys in a file on the container
 init () {
-vault server -config ./vault/config/config.hcl
 vault operator init > /vault/file/keys
 }
 
@@ -18,10 +16,33 @@ vault operator unseal $(grep 'Key 3:' /vault/file/keys | awk '{print $NF}')
 log_in () {
    export ROOT_TOKEN=$(grep 'Initial Root Token:' /vault/file/keys | awk '{print $NF}')
    vault login $ROOT_TOKEN
+   vault secrets enable -path=secret kv-v2
 }
 
+# Creates a token with the id that we give to docker compose up as an enviroment variable(or the default one)
 create_token () {
    vault token create -id $MY_VAULT_TOKEN
+}
+
+set_app_secrets(){
+   vault kv put secret/appvars PORT=$PORT \
+   MYSQL_DRIVER=$MYSQL_DRIVER \
+   MYSQL_SOURCE=$MYSQL_SOURCE \
+   Secret=$Secret \
+   AccessTokenPublicKey=$AccessTokenPublicKey \
+   AccessTokenPrivateKey=$AccessTokenPrivateKey \
+   RefreshTokenPublicKey=$RefreshTokenPublicKey \
+   RefreshTokenPrivateKey=$RefreshTokenPrivateKey \
+   GoogleClientID=$GoogleClientID \
+   GoogleClientSecret=$GoogleClientSecret \
+   GoogleRedirect=$GoogleRedirect \
+   GoogleJwkUrl=$GoogleJwkUrl \
+   GithubClientID=$GithubClientID \
+   GithubClientSecret=$GithubClientSecret \
+   GithubRedirect=$GithubRedirect
+
+   vault kv put secret/superuser AdminUsername=$AdminUsername \
+   AdminPassword=$AdminPassword
 }
 
 if [ -s /vault/file/keys ]; then
@@ -31,6 +52,7 @@ else
    unseal
    log_in
    create_token
+   set_app_secrets
 fi
 
 vault status > /vault/file/status

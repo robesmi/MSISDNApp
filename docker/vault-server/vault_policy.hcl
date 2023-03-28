@@ -4,3 +4,7 @@ path "kv/*" {
 path "kv/my-secret" {
   capabilities = ["read"]
 }
+
+path "secret/*" {
+  capabilities = ["create". "read", "update", "list"]
+}
