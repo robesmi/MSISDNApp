@@ -36,10 +36,10 @@ set_app_secrets(){
    GoogleClientId=$GoogleClientId \
    GoogleClientSecret=$GoogleClientSecret \
    GoogleRedirect=$GoogleRedirect \
-   GoogleJwkUrl=$GoogleJwkUrl \
    GithubClientId=$GithubClientId \
    GithubClientSecret=$GithubClientSecret \
-   GithubRedirect=$GithubRedirect
+   GithubRedirect=$GithubRedirect \
+   EncryptKey=$EncryptKey
 
    vault kv put secret/superuser AdminUsername=$AdminUsername \
    AdminPassword=$AdminPassword

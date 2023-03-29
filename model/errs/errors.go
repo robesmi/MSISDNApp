@@ -154,3 +154,17 @@ func NewTokenValidationError(msg string) *TokenValidationError{
 		Message: "Token validation error: " + msg,
 	}
 }
+
+type EncryptionError struct{
+	Message string
+}
+
+func(u EncryptionError) Error() string{
+	return u.Message
+}
+
+func NewEncryptionError(msg string) *EncryptionError{
+	return &EncryptionError{
+		Message: "Encryption error: " + msg,
+	}
+}
