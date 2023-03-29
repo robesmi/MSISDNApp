@@ -22,8 +22,9 @@ func EncryptEmailAes256(key []byte, message string) (string, error) {
 		return "", errs.NewEncryptionError(cErr.Error())
 	}
 
+	// Uses the first 12 bytes of the message(email) as its nonce
+	// So we can reliably get the same output needed for database lookup
 	nonce := make([]byte, gcm.NonceSize())
-
 	copy(nonce[:], []byte(message))
 
 
