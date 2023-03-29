@@ -2,6 +2,7 @@ package vault
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/vault/api"
 )
@@ -37,7 +38,7 @@ func (v Vault) Insert(path string, kv map[string]interface{}) (error){
 
 // Fetch takes the path and an arbitrary amount of keys that should
 // be present in the vault at that path and returns a map[string]string
-// with the ones that match
+// with the ones that match. If no keys are provided, returns all values
 func (v Vault) Fetch(path string, key ...string) (map[string]string, error){
 
 	ctx := context.Background()
@@ -47,10 +48,20 @@ func (v Vault) Fetch(path string, key ...string) (map[string]string, error){
 		return nil, err
 	}
 	result := make(map[string]string)
-	for _, v := range key{
-		if val, ok := res.Data[v].(string); ok {
-			result[v] = val
+
+	if len(key) == 0{
+		for k,v := range res.Data{
+			strKey := fmt.Sprint(k)
+			strVal := fmt.Sprint(v)
+			result[strKey] = strVal
 		}
+		return result, nil
+	}else{
+		for _, v := range key{
+			if val, ok := res.Data[v].(string); ok {
+				result[v] = val
+			}
+		}
+		return result, nil
 	}
-	return result, nil
 }

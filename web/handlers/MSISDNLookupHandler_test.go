@@ -29,8 +29,8 @@ func setup(t *testing.T, w *httptest.ResponseRecorder) func(){
 	mockLookupService = service.NewMockMSISDNService(ctrl)
 	mockAuthService = service.NewMockAuthService(ctrl)
 	lh = MSISDNLookupHandler{mockLookupService, zerolog.Nop()}
-	ah = AuthHandler{mockAuthService, zerolog.Nop()}
-	aph = AuthApiHandler{mockAuthService}
+	ah = AuthHandler{mockAuthService, zerolog.Nop(), nil}
+	aph = AuthApiHandler{mockAuthService, nil}
 
 	gin.SetMode(gin.TestMode)
 	ctx, router = gin.CreateTestContext(w)

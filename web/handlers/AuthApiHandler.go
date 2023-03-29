@@ -10,10 +10,12 @@ import (
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/utils"
+	"github.com/robesmi/MSISDNApp/vault"
 )
 
 type AuthApiHandler struct {
 	Service service.AuthService
+	Vault *vault.Vault
 }
 
 type RefreshRequest struct{
@@ -141,7 +143,7 @@ func (a AuthApiHandler) RefreshAccessTokenCall(c *gin.Context){
 		return
 	}
 
-	refClaims, valErr := validateAccessToken(refToken.RefreshToken)
+	refClaims, valErr := validateAccessToken(a.Vault, refToken.RefreshToken)
 	if valErr != nil{
 		log.Println("Error validating refresh token:" + valErr.Error())
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
@@ -180,7 +182,7 @@ func (a AuthApiHandler) LogOutCall(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	refClaims, valErr := validateRefreshToken(refToken.RefreshToken)
+	refClaims, valErr := validateRefreshToken(a.Vault, refToken.RefreshToken)
 	if valErr != nil{
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)

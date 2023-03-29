@@ -14,18 +14,34 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/robesmi/MSISDNApp/config"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/utils"
+	"github.com/robesmi/MSISDNApp/vault"
 	"github.com/rs/zerolog"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
 
 type AuthHandler struct {
-	Service service.AuthService
-	Logger zerolog.Logger
+	Service	service.AuthService
+	Logger	zerolog.Logger
+	Vault	*vault.Vault
+}
+
+func NewAuthHandler(service service.AuthService, logger zerolog.Logger, vault *vault.Vault) *AuthHandler{
+	
+	data, err := vault.Fetch("appvars", "GithubClientId", "GithubClientSecret", "GithubRedirect", "GoogleClientId")
+	if err != nil{
+		return nil
+	}
+
+	googleClientId = data["GoogleClientId"]
+	githubConfig.ClientID = data["GithubClientId"]
+	githubConfig.ClientSecret = data["GithubClientSecret"]
+	githubConfig.RedirectURL = data["GithubRedirect"]
+
+	return &AuthHandler{Service: service, Logger: logger, Vault: vault}
 }
 
 type LoginForm struct {
@@ -48,19 +64,7 @@ var githubConfig = &oauth2.Config{
 	},
 }
 
-func init(){
-
-	//Get the identity provider information from a non published file and set them in the configs
-	config, err := config.LoadConfig()
-	if err != nil{
-		log.Println("Error loading config: " + err.Error())
-	}
-
-	githubConfig.ClientID = config.GithubClientID
-	githubConfig.ClientSecret = config.GithubClientSecret
-	githubConfig.RedirectURL = config.GithubRedirect
-
-}
+var googleClientId string
 
 // GetRegisterPage returns the registration page that will be used for presenting
 // the available registration methods
@@ -220,7 +224,6 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	}
 
 	// Get the relevant fields from the response
-	config, _ := config.LoadConfig()
 	idTokenFields := strings.Split(string(respData), "&")
 	clientId, idJWT ,csrfToken := strings.Split(idTokenFields[1],"=")[1], strings.Split(idTokenFields[2],"=")[1], strings.Split(idTokenFields[4],"=")[1]
 
@@ -229,14 +232,17 @@ func (a AuthHandler) HandleGoogleCode(c *gin.Context){
 	if err != nil{
 		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("Error getting csrf protection cookie")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
+		return
 	}
 	if csrfToken != csrfCookie.Value{
 		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("CSRF protection cookie and token do not match")
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
+		return
 	}
-	if config.GoogleClientID != clientId{
-		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg("ID Token client id does not match")
+	if googleClientId != clientId{
+		a.Logger.Error().Err(err).Str("package","handlers").Str("context","HandleGoogleCode").Msg(fmt.Sprintf("ID Token client id does not match got %s expected %s", googleClientId, clientId))
 		c.Redirect(http.StatusFound, "/register?error=AuthError")
+		return
 	}
 
 	// Extract the email from the ID token claims and use it to register/login the user
@@ -360,7 +366,7 @@ func (a AuthHandler) RefreshAccessToken(c *gin.Context){
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	refClaims, valErr := utils.ValidateRefreshToken(refToken)
+	refClaims, valErr := utils.ValidateRefreshToken(a.Vault, refToken)
 	if valErr != nil{
 		a.Logger.Error().Err(valErr).Str("package","handlers").Str("context","RefreshAccessToken").Msg("Error validating refresh token")
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
@@ -393,7 +399,7 @@ func (a AuthHandler) LogOut(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 		return
 	}
-	refClaims, valErr := utils.ValidateRefreshToken(refToken)
+	refClaims, valErr := utils.ValidateRefreshToken(a.Vault, refToken)
 	if valErr != nil{
 		c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 		c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)

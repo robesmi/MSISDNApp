@@ -55,9 +55,9 @@ services:
       - "./docker/db-server/init.sql:/docker-entrypoint-initdb.d/1.sql"
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      interval: 9s
-      timeout: 3s
-      retries: 20
+      interval: 20s
+      timeout: 1s
+      retries: 5
     networks:
       - app
   project:

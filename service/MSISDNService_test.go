@@ -23,7 +23,7 @@ func setup(t *testing.T) func(){
 	mockMSISDNRepo = repository.NewMockMSISDNRepository(ctrl)
 	mockUserRepo = repository.NewMockUserRepository(ctrl)
 	lookupService = NewMSISDNService(mockMSISDNRepo)
-	authService = ReturnAuthService(mockUserRepo)
+	authService = ReturnAuthService(mockUserRepo, nil)
 
 	return func(){
 		lookupService = nil

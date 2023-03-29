@@ -7,6 +7,7 @@ import (
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
+	"github.com/robesmi/MSISDNApp/vault"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,10 +25,10 @@ func TestRegisterNativeUserValidInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault *vault.Vault) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault *vault.Vault) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 
@@ -112,10 +113,10 @@ func TestLoginNativeUserCorrectInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault *vault.Vault) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault *vault.Vault) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{
@@ -156,10 +157,10 @@ func TestRegisterImportedUserValidInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault *vault.Vault) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault *vault.Vault) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 
@@ -219,10 +220,10 @@ func TestLoginImportedUserValidInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault *vault.Vault) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault *vault.Vault) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{
@@ -260,10 +261,10 @@ func TestRefreshTokensValid(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault *vault.Vault) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault *vault.Vault) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{
@@ -302,10 +303,10 @@ func TestRefreshTokensInvalid(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault *vault.Vault) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault *vault.Vault) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{

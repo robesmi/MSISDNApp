@@ -33,11 +33,11 @@ set_app_secrets(){
    AccessTokenPrivateKey=$AccessTokenPrivateKey \
    RefreshTokenPublicKey=$RefreshTokenPublicKey \
    RefreshTokenPrivateKey=$RefreshTokenPrivateKey \
-   GoogleClientID=$GoogleClientID \
+   GoogleClientId=$GoogleClientId \
    GoogleClientSecret=$GoogleClientSecret \
    GoogleRedirect=$GoogleRedirect \
    GoogleJwkUrl=$GoogleJwkUrl \
-   GithubClientID=$GithubClientID \
+   GithubClientId=$GithubClientId \
    GithubClientSecret=$GithubClientSecret \
    GithubRedirect=$GithubRedirect
 

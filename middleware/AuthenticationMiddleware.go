@@ -9,9 +9,11 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/utils"
+	"github.com/robesmi/MSISDNApp/vault"
 )
 
-func ValidateTokenUserSection(c *gin.Context){
+func ValidateTokenUserSection(vault *vault.Vault) gin.HandlerFunc{
+	return func(c *gin.Context){
 			//Get the token either from authorization header or cookie
 			var access_token string
 			cookie, erro := c.Cookie("access_token")
@@ -33,7 +35,7 @@ func ValidateTokenUserSection(c *gin.Context){
 			// Check whether the token is valid
 			var claims jwt.MapClaims
 			var err error
-			claims, err = utils.ValidateAccessToken(access_token)
+			claims, err = utils.ValidateAccessToken(vault, access_token)
 			if err != nil{
 				if _,ok := err.(*errs.ExpiredTokenError); ok{
 
@@ -47,7 +49,7 @@ func ValidateTokenUserSection(c *gin.Context){
 						c.Abort()
 						return
 					}
-					_, valErr := utils.ValidateRefreshToken(refresh_token)
+					_, valErr := utils.ValidateRefreshToken(vault, refresh_token)
 					if valErr != nil{
 						c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 						c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
@@ -78,11 +80,12 @@ func ValidateTokenUserSection(c *gin.Context){
 				c.Redirect(http.StatusFound, "/?error=Unauthorized")
 				c.Abort()
 				return
-			}
-			
+			}		
+	}
 }
 
-func ValidateTokenAdminSection(c *gin.Context){
+func ValidateTokenAdminSection(vault *vault.Vault) gin.HandlerFunc {
+	return func(c *gin.Context){
 
 		//Get the token either from authorization header or cookie
 		var access_token string
@@ -105,7 +108,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 		// Check whether the token is valid
 		var claims jwt.MapClaims
 		var err error
-		claims, err = utils.ValidateAccessToken(access_token)
+		claims, err = utils.ValidateAccessToken(vault, access_token)
 		if err != nil{
 			if _,ok := err.(*errs.ExpiredTokenError); ok{
 
@@ -117,7 +120,7 @@ func ValidateTokenAdminSection(c *gin.Context){
 					c.Abort()
 					return
 				}
-				_, valErr := utils.ValidateRefreshToken(refresh_token)
+				_, valErr := utils.ValidateRefreshToken(vault, refresh_token)
 				if valErr != nil{
 					c.SetCookie("access_token", "", 0,"/","localhost",false,true)
 					c.SetCookie("refresh_token", "", 0,"/","localhost",false,true)
@@ -147,62 +150,63 @@ func ValidateTokenAdminSection(c *gin.Context){
 			c.Redirect(http.StatusTemporaryRedirect, "/?error=Unauthorized")
 			c.Abort()
 			return
-		}
-		
+		}	
+	}
 }
 
-func ValidateApiTokenUserSection(c *gin.Context){
-	//Get the token from authorization header
-	var access_token string
-	authorizationHeader := c.Request.Header.Get("Authorization")
-	fields := strings.Fields(authorizationHeader)
+func ValidateApiTokenUserSection(vault *vault.Vault) gin.HandlerFunc{
+	return func(c *gin.Context){
+		//Get the token from authorization header
+		var access_token string
+		authorizationHeader := c.Request.Header.Get("Authorization")
+		fields := strings.Fields(authorizationHeader)
 
-	if len(fields) != 0 && fields[0] == "Bearer" {
-		access_token = fields[1]
-	}
-	// If there's no token, kick user back
-	if access_token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "No auth token",
-		})
-		c.Abort()
-		return
-	}
-	
-	// Check whether the token is valid
-	var claims jwt.MapClaims
-	var err error
-	claims, err = utils.ValidateAccessToken(access_token)
-	if err != nil{
-		if _,ok := err.(*errs.ExpiredTokenError); ok{
-			// Redirect to refresh handler
+		if len(fields) != 0 && fields[0] == "Bearer" {
+			access_token = fields[1]
+		}
+		// If there's no token, kick user back
+		if access_token == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Authorization token expired",
+				"error": "No auth token",
 			})
 			c.Abort()
 			return
+		}
+		
+		// Check whether the token is valid
+		var claims jwt.MapClaims
+		var err error
+		claims, err = utils.ValidateAccessToken(vault, access_token)
+		if err != nil{
+			if _,ok := err.(*errs.ExpiredTokenError); ok{
+				// Redirect to refresh handler
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"error": "Authorization token expired",
+				})
+				c.Abort()
+				return
 
+			}else{
+				log.Println("Token error " + err.Error())
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Internal error",
+				})
+				c.Abort()
+				return
+			}
+		}
+		
+		// Check if token contains appropriate role
+		role := claims["role"]
+		if role == "user"{
+			c.Next()
+			return
 		}else{
-			log.Println("Token error " + err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Internal error",
+			c.JSON(http.StatusBadRequest,gin.H{
+				"error":"Invalid access token, reauthorize.",
 			})
 			c.Abort()
 			return
 		}
 	}
-	
-	// Check if token contains appropriate role
-	role := claims["role"]
-	if role == "user"{
-		c.Next()
-		return
-	}else{
-		c.JSON(http.StatusBadRequest,gin.H{
-			"error":"Invalid access token, reauthorize.",
-		})
-		c.Abort()
-		return
-	}
-	
 }

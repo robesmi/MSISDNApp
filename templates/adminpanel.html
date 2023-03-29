@@ -183,6 +183,11 @@
                     <input type="submit" value="Get All Operators">
                 </form>
             </div>
+            <div class="col-md-2">
+                <form id="get-all-secrets" method="POST" action="/admin/getsecrets">
+                    <input type="submit" value="Get All Secrets">
+                </form>
+            </div>
         </div>
 
         {{ if .users }}
@@ -268,6 +273,23 @@
                         <input type="submit" value="Remove"> 
                     </form>
                 </td>
+                </tr>
+                {{ end }}
+            {{ end }}
+        </table>
+        {{ end }}
+
+        {{ if .appsecrets }}
+        <table class="table table-bordered">
+            {{ with .appsecrets}}
+                <tr> 
+                <td> Key </td>
+                <td> Value</td>
+                </tr>
+                {{ range $key, $value := . }}
+                <tr>
+                <td> {{ $key }}</td>
+                <td> {{ $value }}</td>
                 </tr>
                 {{ end }}
             {{ end }}
