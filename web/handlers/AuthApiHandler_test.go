@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
+	"github.com/robesmi/MSISDNApp/vault"
 )
 
 func TestNativeRegisterCallCorrectInput(t *testing.T) {
@@ -275,7 +276,7 @@ func TestRefreshAccessTokenCall(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	validateAccessToken = func(s string)(jwt.MapClaims, error){
+	validateAccessToken = func(vault vault.VaultInterface,s string)(jwt.MapClaims, error){
 		return jwt.MapClaims{
 			"id":"testid",
 		},nil
@@ -315,8 +316,8 @@ func TestLogOutCall(t *testing.T) {
 	}
 	jsonVal, _ := json.Marshal(jsonReq)
 
-
-	validateRefreshToken = func(s string)(jwt.MapClaims, error){
+	
+	validateRefreshToken = func(vault vault.VaultInterface,s string)(jwt.MapClaims, error){
 		return jwt.MapClaims{
 			"id":"testid",
 		},nil

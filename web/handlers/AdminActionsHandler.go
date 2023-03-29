@@ -12,6 +12,7 @@ import (
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/service"
+	"github.com/robesmi/MSISDNApp/vault"
 	"github.com/rs/zerolog"
 )
 
@@ -19,6 +20,7 @@ type AdminActionsHandler struct {
 	AuthService service.AuthService
 	MSISDNService service.MSISDNService
 	Logger zerolog.Logger
+	Vault vault.VaultInterface
 }
 
 func (adh AdminActionsHandler) GetAdminPanelPage(c *gin.Context){
@@ -112,10 +114,11 @@ func (adh AdminActionsHandler) EditUser(c *gin.Context){
 	// Do the rest of the edit user logic here
 	editErr := adh.AuthService.EditUserById(editUser.UUID, editUser.Username, editUser.Password, editUser.Role)
 	if editErr != nil{
-		adh.Logger.Error().Err(err).Str("package","handlers").Str("context","EditUser").Msg("Error editing user")
+		adh.Logger.Error().Err(editErr).Str("package","handlers").Str("context","EditUser").Msg("Error editing user")
 		c.HTML(http.StatusBadRequest, "edituser.html", gin.H{
 			"error": "Internal Error: " + editErr.Error(),
 		})
+		return
 	}
 	c.Redirect(http.StatusFound, "/admin/panel")
 	

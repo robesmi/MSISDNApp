@@ -11,18 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"github.com/robesmi/MSISDNApp/config"
 	"github.com/robesmi/MSISDNApp/middleware"
 	"github.com/robesmi/MSISDNApp/repository"
 	"github.com/robesmi/MSISDNApp/service"
 	"github.com/robesmi/MSISDNApp/web/handlers"
 	"github.com/rs/zerolog"
+	vaultapi "github.com/hashicorp/vault/api"
+	"github.com/robesmi/MSISDNApp/vault"
+
 )
 
 // Start initializes the needed route handling, connections between layers and starts the server
 func Start(){
 
-	//Setup
+	//Setting up gin router, recovery and logging middleware
 	router := gin.New()
 	router.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		return fmt.Sprintf("%s - [%s] \"%s %s %s %d \"%s\" %s\"\n",
@@ -40,29 +42,51 @@ func Start(){
 
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-	config, err := config.LoadConfig()
-	if err != nil{
-		logger.Error().Err(err).Str("package","web").Str("context","Start").Msg("Error loading config")
+	// Setup the client for interacting with the vault
+	vault_config := vaultapi.DefaultConfig()
+
+	vAddr, set := os.LookupEnv("VAULT_ADDR")
+	if !set{
+		logger.Error().Msg("VAULT_ADDR is not set in env")
+		os.Exit(1)
+	}else{
+		vault_config.Address = vAddr
+	}
+	
+	token,ok := os.LookupEnv("MY_VAULT_TOKEN")
+	if !ok {
+		logger.Error().Msg("MY_VAULT_TOKEN is not set in env")
+		os.Exit(1)
 	}
 
-	dbClient := getStubDbClient()
+	client, vaultErr  := vault.New(vault_config, token)
+	if vaultErr != nil {
+		logger.Error().Err(vaultErr).Str("package","web").Str("context","Start").Msg("Error starting vault client")
+	}
+
+	// Immediately get some variables that will be needed for setup
+	startupVars, fetchErr := client.Fetch("appvars", "Secret", "PORT")
+	if fetchErr != nil{
+		logger.Error().Err(fetchErr).Str("package","web").Str("context","Start").Msg("Error getting startup variables")
+	}
+	
+	// Setup the db connection along with initializing the layers
+	dbClient := getDbClient(client, &logger)
 	msrepo := repository.NewMSISDNRepository(dbClient)
 	aurepo := repository.NewAuthRepository(dbClient)
 	mh := handlers.MSISDNLookupHandler{Service: service.NewMSISDNService(msrepo), Logger: logger}
-	ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo), Logger: logger}
-	aph := handlers.AuthApiHandler{Service: service.ReturnAuthService(aurepo)}
-	adh := handlers.AdminActionsHandler{AuthService: service.ReturnAuthService(aurepo), 
-		MSISDNService: service.NewMSISDNService(msrepo), 
-		Logger: logger,}
+	//ah := handlers.AuthHandler{Service: service.ReturnAuthService(aurepo), Logger: logger, Vault: client}
+	ah := handlers.NewAuthHandler(service.ReturnAuthService(aurepo, client), logger, client)
+	aph := handlers.AuthApiHandler{Service: service.ReturnAuthService(aurepo, client), Vault: client}
+	adh := handlers.AdminActionsHandler{AuthService: service.ReturnAuthService(aurepo, client), MSISDNService: service.NewMSISDNService(msrepo), Logger: logger, Vault: client}
 
 	//Wiring
 	router.LoadHTMLGlob("templates/*.html")
+
+	store := cookie.NewStore([]byte(startupVars["Secret"]))
+  	router.Use(sessions.Sessions("mysession", store))
 	
 	router.GET("/", mh.GetMainPage)
-	
-	
-	store := cookie.NewStore([]byte(config.Secret))
-  	router.Use(sessions.Sessions("mysession", store))
 
 	router.GET("/register", ah.GetRegisterPage)
 	router.POST("/register", ah.HandleNativeRegister)
@@ -99,10 +123,10 @@ func Start(){
 	router.POST("/api/refresh", aph.RefreshAccessTokenCall)
 	router.POST("/api/logout", aph.LogOutCall)
 
-	router.POST("/service/api/lookup", middleware.ValidateApiTokenUserSection, mh.NumberLookupApi)
+	router.POST("/service/api/lookup", middleware.ValidateApiTokenUserSection(client), mh.NumberLookupApi)
 
 	userSection := router.Group("/service")
-	userSection.Use(middleware.ValidateTokenUserSection)
+	userSection.Use(middleware.ValidateTokenUserSection(client))
 	
 	{
 		userSection.GET("/lookup", mh.GetLookupPage)
@@ -110,7 +134,7 @@ func Start(){
 	}
 
 	adminSection := router.Group("/admin")
-	adminSection.Use(middleware.ValidateTokenAdminSection)
+	adminSection.Use(middleware.ValidateTokenAdminSection(client))
 	{
 		adminSection.GET("/panel", adh.GetAdminPanelPage)
 
@@ -128,6 +152,7 @@ func Start(){
 		adminSection.POST("/getusers", adh.GetAllUsers)
 		adminSection.POST("/getcountries", adh.GetAllCountries)
 		adminSection.POST("/getoperators", adh.GetAllMobileOperators)
+
 	}
 
 	router.NoRoute( func(c *gin.Context){
@@ -135,26 +160,32 @@ func Start(){
 	})
 
 	// Initialize an admin user
-	_, regErr := ah.Service.RegisterNativeUser(config.AdminUsername, config.AdminPassword, "admin")
+	user, userErr := client.Fetch("superuser", "AdminUsername", "AdminPassword")
+	if userErr != nil{
+		logger.Err(userErr).Str("package","web").Str("context","init").Msg("Error Error fetching admin credentials from vault")
+	}
+	_, regErr := ah.Service.RegisterNativeUser(user["AdminUsername"], user["AdminPassword"], "admin")
 	if regErr != nil{
 		logger.Err(regErr).Str("package","web").Str("context","init").Msg("Error during init")
 	}
 
 	//Starting up server
-	router.Run(":" + config.Port)
+	router.Run(":" + startupVars["PORT"])
 }
 
-// getStubDbClient initializes the db connection and returns it to Start
-func getStubDbClient() *sqlx.DB{
+// getDbClient initializes the db connection and returns it to Start
+func getDbClient(vault vault.VaultInterface, logger *zerolog.Logger) *sqlx.DB{
 
-	config, appErr := config.LoadConfig()
-	if appErr != nil{
-		panic(appErr)
+	dbCreds, fetchErr := vault.Fetch("appvars", "MYSQL_DRIVER", "MYSQL_SOURCE")
+	if fetchErr != nil {
+		logger.Error().Err(fetchErr).Str("package","web").Str("context","getDbClient").Msg("Error getting db details from vault")
 	}
 
-	client, err := sqlx.Open(config.MySqlDriver,config.MySqlSource)
+
+	client, err := sqlx.Open(dbCreds["MYSQL_DRIVER"],dbCreds["MYSQL_SOURCE"])
 	if err != nil {
-		panic(err)
+		logger.Error().Err(err).Str("package","web").Str("context","getDbClient").Msg("Error opening db connection")
+		
 	}
 	
 	client.SetMaxOpenConns(10)

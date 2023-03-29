@@ -7,6 +7,7 @@ import (
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
+	"github.com/robesmi/MSISDNApp/vault"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,17 +25,24 @@ func TestRegisterNativeUserValidInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault vault.VaultInterface) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault vault.VaultInterface) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 
 
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return inputEmail, nil
+	}
+	test := map[string]string{"":""}
+
 	neErr := errs.NewUserNotFoundError()
+	
 	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(nil,neErr)
-	mockUserRepo.EXPECT().RegisterNativeUser(gomock.Any(),inputEmail,gomock.Any(),gomock.Any(),gomock.Any())
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
+	mockUserRepo.EXPECT().RegisterNativeUser(gomock.Any(),gomock.Any(),gomock.Any(),gomock.Any(),gomock.Any())
 
 	//Act
 	resp, err := authService.RegisterNativeUser(inputEmail,inputPassword,"user")
@@ -112,10 +120,10 @@ func TestLoginNativeUserCorrectInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault vault.VaultInterface) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault vault.VaultInterface) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{
@@ -123,8 +131,14 @@ func TestLoginNativeUserCorrectInput(t *testing.T) {
 		Username: inputEmail,
 		Password: string(encodedPassword),
 	}
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return inputEmail, nil
+	}
+
+	test := map[string]string{"":""}
 
 	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(&respUser,nil)
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 	mockUserRepo.EXPECT().UpdateRefreshToken(respUser.UUID,expResponse.RefreshToken)
 
 	//Act
@@ -156,16 +170,22 @@ func TestRegisterImportedUserValidInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault vault.VaultInterface) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault vault.VaultInterface) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return inputEmail, nil
+	}
+
+	test := map[string]string{"":""}
 
 
 	neErr := errs.NewUserNotFoundError()
 	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(nil,neErr)
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 	mockUserRepo.EXPECT().RegisterImportedUser(gomock.Any(),inputEmail,gomock.Any(),gomock.Any())
 
 	//Act
@@ -194,8 +214,15 @@ func TestRegisterImportedUserDuplicateUser(t *testing.T) {
 	testUser := model.User{
 		UUID: "1",
 	}
-	
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return inputEmail, nil
+	}
+	test := map[string]string{"":""}
+
+
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(&testUser,nil)
+
 	//Act
 	_, err := authService.RegisterImportedUser(inputEmail)
 
@@ -219,18 +246,24 @@ func TestLoginImportedUserValidInput(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault vault.VaultInterface) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault vault.VaultInterface) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{
 		UUID: "testid",
 		Username: inputEmail,
 	}
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return inputEmail, nil
+	}
+	test := map[string]string{"":""}
+
 	
 	mockUserRepo.EXPECT().GetUserByUsername(inputEmail).Return(&respUser,nil)
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 	mockUserRepo.EXPECT().UpdateRefreshToken(respUser.UUID,expResponse.RefreshToken).Return(nil)
 	//Act
 	resp, err := authService.LoginImportedUser(inputEmail)
@@ -260,10 +293,10 @@ func TestRefreshTokensValid(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault vault.VaultInterface) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault vault.VaultInterface) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{
@@ -302,10 +335,10 @@ func TestRefreshTokensInvalid(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	createAccessToken = func(role string) (string,error) {
+	createAccessToken = func(role string, vault vault.VaultInterface) (string,error) {
 		return expResponse.AccessToken, nil
 	}
-	createRefreshToken = func(userid string) (string, error) {
+	createRefreshToken = func(userid string, vault vault.VaultInterface) (string, error) {
 		return expResponse.RefreshToken, nil
 	}
 	respUser := model.User{

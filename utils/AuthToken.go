@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"log"
 	"time"
+
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/robesmi/MSISDNApp/config"
 	"github.com/robesmi/MSISDNApp/model/errs"
+	"github.com/robesmi/MSISDNApp/vault"
 )
+
+var GoogleJwkUrl = "https://www.googleapis.com/oauth2/v3/certs"
 
 // CreateAccessToken creates a JWT access token with the custom claim "role" that will
 // be used to check whether the bearer has the permissions to use certain routes
-func CreateAccessToken(role string) (string, error){
+func CreateAccessToken(role string, vault vault.VaultInterface) (string, error){
 
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
@@ -21,8 +24,11 @@ func CreateAccessToken(role string) (string, error){
 	claims["nbf"] = time.Now().Unix()
 	claims["role"] = role
 
-	config, _ := config.LoadConfig()
-	decodedPrivateKey, err := base64.StdEncoding.DecodeString(config.AccessTokenPrivateKey)
+	data, fetchErr := vault.Fetch("appvars", "AccessTokenPrivateKey")
+	if fetchErr != nil{
+		return "", fetchErr
+	}
+	decodedPrivateKey, err := base64.StdEncoding.DecodeString(data["AccessTokenPrivateKey"])
 	if err != nil{
 		return "", errs.NewTokenError(err.Error())
 	}
@@ -40,7 +46,7 @@ func CreateAccessToken(role string) (string, error){
 
 // CreateRefreshToken creates a JWT refresh token with the custom claim "id" that will
 // be used to check whether the token has been revoked or not
-func CreateRefreshToken(userid string) (string, error) {
+func CreateRefreshToken(userid string, vault vault.VaultInterface) (string, error) {
 
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
@@ -48,8 +54,11 @@ func CreateRefreshToken(userid string) (string, error) {
 	claims["nbf"] = time.Now().Unix()
 	claims["id"] = userid
 
-	config, _ := config.LoadConfig()
-	decodedPrivateKey, err := base64.StdEncoding.DecodeString(config.RefreshTokenPrivateKey)
+	data, fetchErr := vault.Fetch("appvars", "RefreshTokenPrivateKey")
+	if fetchErr != nil{
+		return "", fetchErr
+	}
+	decodedPrivateKey, err := base64.StdEncoding.DecodeString(data["RefreshTokenPrivateKey"])
 	if err != nil{
 		return "", errs.NewTokenError(err.Error())
 	}
@@ -67,11 +76,16 @@ func CreateRefreshToken(userid string) (string, error) {
 
 // ValidateRefreshToken takes a jwt access token as input and validates it. Returns a jwt.MapClaims of the user role or
 // an error otherwise
-func ValidateAccessToken(token string) (jwt.MapClaims,error){
-	config, _ := config.LoadConfig()
-	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.AccessTokenPublicKey)
-	if err != nil {
-		return nil,errs.NewUnexpectedError(err.Error())
+func ValidateAccessToken(client vault.VaultInterface, token string) (jwt.MapClaims,error){
+
+	publicKey, fetchErr := client.Fetch("appvars", "AccessTokenPublicKey")
+	if fetchErr != nil{
+		return nil, fetchErr
+	}
+
+	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey["AccessTokenPublicKey"])
+	if err != nil{
+		return nil, err
 	}
 
 	key,err :=  jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
@@ -104,11 +118,15 @@ func ValidateAccessToken(token string) (jwt.MapClaims,error){
 
 // ValidateRefreshToken takes a jwt refresh token as input and validates it. Returns a jwt.MapClaims of the user uuid or
 // an error
-func ValidateRefreshToken(token string) (jwt.MapClaims,error){
-	config, _ := config.LoadConfig()
-	decodedPublicKey, err := base64.StdEncoding.DecodeString(config.RefreshTokenPublicKey)
-	if err != nil {
-		return nil,errs.NewUnexpectedError(err.Error())
+func ValidateRefreshToken(client vault.VaultInterface, token string) (jwt.MapClaims,error){
+
+	publicKey, fetchErr := client.Fetch("appvars", "RefreshTokenPublicKey")
+	if fetchErr != nil{
+		return nil, fetchErr
+	}
+	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey["RefreshTokenPublicKey"])
+	if err != nil{
+		return nil, err
 	}
 
 	key,err :=  jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
@@ -148,8 +166,7 @@ func ValidateRefreshToken(token string) (jwt.MapClaims,error){
 // it using Google's provided jwk url and returns a jwt.MapClaims response with its claims
 func ValidateGoogleIdToken(token string) (jwt.MapClaims, error){
 
-	conf, _ := config.LoadConfig()
-	jwks, err := keyfunc.Get(conf.GoogleJwkUrl,keyfunc.Options{})
+	jwks, err := keyfunc.Get(GoogleJwkUrl,keyfunc.Options{})
 	if err != nil{
 		log.Fatalf("Failed to create JWK from url" + err.Error())
 		log.Println("Failed to create JWK from urk " + err.Error())

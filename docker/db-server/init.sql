@@ -56,7 +56,7 @@ INSERT INTO `mobile_operators` VALUES
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
     `id` varchar(36) NOT NULL,
-	`username` varchar(50) NOT NULL,
+	`username` varchar(100) NOT NULL,
 	`password` varchar(100),
 	`role` varchar(10) NOT NULL,
 	`refresh_token` varchar(512),

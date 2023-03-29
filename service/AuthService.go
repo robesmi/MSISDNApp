@@ -7,15 +7,17 @@ import (
 	"github.com/robesmi/MSISDNApp/model/errs"
 	"github.com/robesmi/MSISDNApp/repository"
 	"github.com/robesmi/MSISDNApp/utils"
+	"github.com/robesmi/MSISDNApp/vault"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type DefaultAuthService struct {
 	repository repository.UserRepository
+	Vault vault.VaultInterface
 }
 
-func ReturnAuthService(repository repository.UserRepository) AuthService {
-	return DefaultAuthService{repository: repository}
+func ReturnAuthService(repository repository.UserRepository, vault vault.VaultInterface) AuthService {
+	return DefaultAuthService{repository: repository, Vault: vault}
 }
 //go:generate mockgen -destination=../mocks/service/mockAuthService.go -package=service github.com/robesmi/MSISDNApp/service AuthService
 type AuthService interface {
@@ -44,6 +46,7 @@ type AuthService interface {
 var (
 	createAccessToken = utils.CreateAccessToken
 	createRefreshToken = utils.CreateRefreshToken
+	encryptEmailAes256 = utils.EncryptEmailAes256
 )
 
 
@@ -56,12 +59,22 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string,
 	resp , err := s.repository.GetUserByUsername(username)
 	if _,ok := err.(*errs.UserNotFoundError); ok {
 		newID := uuid.NewString()
+
+		encryptKey, fetchErr := s.Vault.Fetch("appvars","EncryptKey")
+		if fetchErr != nil{
+			return nil, fetchErr
+		}
+
+		encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+		if encErr != nil{
+			return nil, encErr
+		}
 	
-		accessToken , atErr := createAccessToken(role)
+		accessToken , atErr := createAccessToken(role, s.Vault)
 		if atErr != nil{
 			return nil, atErr
 		}
-		refreshToken, rtErr := createRefreshToken(newID)
+		refreshToken, rtErr := createRefreshToken(newID, s.Vault)
 		if rtErr != nil {
 			return nil, rtErr
 		}
@@ -69,7 +82,7 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string,
 		if genErr != nil{
 			return nil, errs.NewUnexpectedError(genErr.Error())
 		}
-		regErr := s.repository.RegisterNativeUser(newID, username, string(encodedPassword), role, refreshToken)
+		regErr := s.repository.RegisterNativeUser(newID, encryptedEmail, string(encodedPassword), role, refreshToken)
 		if regErr != nil {
 			return nil, errs.NewUnexpectedError(regErr.Error())
 		}
@@ -96,7 +109,17 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 		return nil, errs.NewInvalidCredentialsError()
 	}
 
-	user, lookupErr := s.repository.GetUserByUsername(username)
+	encryptKey, fetchErr := s.Vault.Fetch("appvars","EncryptKey")
+	if fetchErr != nil{
+		return nil, fetchErr
+	}
+
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	if encErr != nil{
+		return nil, encErr
+	}
+
+	user, lookupErr := s.repository.GetUserByUsername(encryptedEmail)
 	if lookupErr != nil {
 		return nil, lookupErr
 	}
@@ -106,11 +129,11 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 	}
 
 	// Create new tokens and update the refresh token in db
-	accessToken , atErr := createAccessToken(user.Role)
+	accessToken , atErr := createAccessToken(user.Role, s.Vault)
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := createRefreshToken(user.UUID)
+	refreshToken, rtErr := createRefreshToken(user.UUID, s.Vault)
 	if rtErr != nil {
 		return nil, rtErr
 	}
@@ -132,20 +155,31 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 	if username == ""{
 		return nil, errs.NewInvalidCredentialsError()
 	}
-	resp , err := s.repository.GetUserByUsername(username)
+
+	encryptKey, fetchErr := s.Vault.Fetch("appvars","EncryptKey")
+	if fetchErr != nil{
+		return nil, fetchErr
+	}
+
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	if encErr != nil{
+		return nil, encErr
+	}
+
+	resp , err := s.repository.GetUserByUsername(encryptedEmail)
 	if _, ok := err.(*errs.UserNotFoundError); ok {
 		
 		newID := uuid.NewString()
 		
-		accessToken , atErr := createAccessToken("user")
+		accessToken , atErr := createAccessToken("user", s.Vault)
 		if atErr != nil{
 			return nil, atErr
 		}
-		refreshToken, rtErr := createRefreshToken(newID)
+		refreshToken, rtErr := createRefreshToken(newID, s.Vault)
 		if rtErr != nil {
 			return nil, rtErr
 		}
-		errr := s.repository.RegisterImportedUser(newID, username, "user",refreshToken)
+		errr := s.repository.RegisterImportedUser(newID, encryptedEmail, "user", refreshToken)
 		if errr != nil {
 			return nil, errr
 		}
@@ -169,17 +203,27 @@ func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginRespons
 		return nil, errs.NewInvalidCredentialsError()
 	}
 
-	user, lookupErr := s.repository.GetUserByUsername(username)
+	encryptKey, fetchErr := s.Vault.Fetch("appvars","EncryptKey")
+	if fetchErr != nil{
+		return nil, fetchErr
+	}
+
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	if encErr != nil{
+		return nil, encErr
+	}
+
+	user, lookupErr := s.repository.GetUserByUsername(encryptedEmail)
 	if lookupErr != nil {
 		return nil, nil
 	}
 
 	// Create new tokens and update the refresh token in db
-	accessToken , atErr := createAccessToken(user.Role)
+	accessToken , atErr := createAccessToken(user.Role, s.Vault)
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := createRefreshToken(user.UUID)
+	refreshToken, rtErr := createRefreshToken(user.UUID, s.Vault)
 	if rtErr != nil {
 		return nil, rtErr
 	}
@@ -205,11 +249,11 @@ func (s DefaultAuthService)RefreshTokens(id string, token string) (*dto.LoginRes
 	if user.RefreshToken != token{
 		return nil, errs.NewRefreshTokenMismatch()
 	}
-	accessToken , atErr := createAccessToken(user.Role)
+	accessToken , atErr := createAccessToken(user.Role, s.Vault)
 	if atErr != nil{
 		return nil, atErr
 	}
-	refreshToken, rtErr := createRefreshToken(user.UUID)
+	refreshToken, rtErr := createRefreshToken(user.UUID, s.Vault)
 	if rtErr != nil {
 		return nil, rtErr
 	}
