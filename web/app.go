@@ -153,7 +153,6 @@ func Start(){
 		adminSection.POST("/getcountries", adh.GetAllCountries)
 		adminSection.POST("/getoperators", adh.GetAllMobileOperators)
 
-		adminSection.POST("/getsecrets", adh.GetAllSecrets)
 	}
 
 	router.NoRoute( func(c *gin.Context){

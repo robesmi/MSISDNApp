@@ -334,19 +334,3 @@ func (adh AdminActionsHandler) RemoveOperator(c *gin.Context){
 
 	c.Redirect( http.StatusFound, "/admin/panel")
 }
-
-func (adh AdminActionsHandler) GetAllSecrets(c *gin.Context){
-
-	data, fetchErr := adh.Vault.Fetch("appvars")
-	if fetchErr != nil{
-		adh.Logger.Error().Err(fetchErr).Str("package","handlers").Str("context","GetAllSecrets").Msg("Error fetching app secrets from vault")
-		c.HTML(http.StatusBadRequest, "adminpanel.html", gin.H{
-			"error": "Internal Error: " + fetchErr.Error(),
-		})
-		return
-	}
-
-	c.HTML(http.StatusOK, "adminpanel.html", gin.H{
-		"appsecrets" : data,
-	})
-}
