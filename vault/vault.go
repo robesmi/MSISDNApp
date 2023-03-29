@@ -10,10 +10,16 @@ import (
 type Vault struct {
 	Vault api.Client
 }
+//go:generate mockgen -destination=../mocks/vault/mockVault.go -package=vault github.com/robesmi/MSISDNApp/vault VaultInterface
+
+type VaultInterface interface{
+	Insert(string, map[string]interface{}) error
+	Fetch(string, ...string) (map[string]string, error)
+}
 
 // New takes a hashicorp vault config and a registered vault token as input
 // and returns a client to interact with the vault
-func New(conf *api.Config, token string) (*Vault, error){
+func New(conf *api.Config, token string) (VaultInterface, error){
 	newClient, err := api.NewClient(conf)
 	if err != nil {
 		return nil, err

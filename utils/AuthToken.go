@@ -16,7 +16,7 @@ var GoogleJwkUrl = "https://www.googleapis.com/oauth2/v3/certs"
 
 // CreateAccessToken creates a JWT access token with the custom claim "role" that will
 // be used to check whether the bearer has the permissions to use certain routes
-func CreateAccessToken(role string, vault *vault.Vault) (string, error){
+func CreateAccessToken(role string, vault vault.VaultInterface) (string, error){
 
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
@@ -46,7 +46,7 @@ func CreateAccessToken(role string, vault *vault.Vault) (string, error){
 
 // CreateRefreshToken creates a JWT refresh token with the custom claim "id" that will
 // be used to check whether the token has been revoked or not
-func CreateRefreshToken(userid string, vault *vault.Vault) (string, error) {
+func CreateRefreshToken(userid string, vault vault.VaultInterface) (string, error) {
 
 	claims := make(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
@@ -76,7 +76,7 @@ func CreateRefreshToken(userid string, vault *vault.Vault) (string, error) {
 
 // ValidateRefreshToken takes a jwt access token as input and validates it. Returns a jwt.MapClaims of the user role or
 // an error otherwise
-func ValidateAccessToken(client *vault.Vault, token string) (jwt.MapClaims,error){
+func ValidateAccessToken(client vault.VaultInterface, token string) (jwt.MapClaims,error){
 
 	publicKey, fetchErr := client.Fetch("appvars", "AccessTokenPublicKey")
 	if fetchErr != nil{
@@ -118,7 +118,7 @@ func ValidateAccessToken(client *vault.Vault, token string) (jwt.MapClaims,error
 
 // ValidateRefreshToken takes a jwt refresh token as input and validates it. Returns a jwt.MapClaims of the user uuid or
 // an error
-func ValidateRefreshToken(client *vault.Vault, token string) (jwt.MapClaims,error){
+func ValidateRefreshToken(client vault.VaultInterface, token string) (jwt.MapClaims,error){
 
 	publicKey, fetchErr := client.Fetch("appvars", "RefreshTokenPublicKey")
 	if fetchErr != nil{

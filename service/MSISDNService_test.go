@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/robesmi/MSISDNApp/mocks/repository"
+	"github.com/robesmi/MSISDNApp/mocks/vault"
 	"github.com/robesmi/MSISDNApp/model"
 	"github.com/robesmi/MSISDNApp/model/dto"
 	"github.com/robesmi/MSISDNApp/model/errs"
@@ -13,6 +14,7 @@ import (
 
 var mockMSISDNRepo *repository.MockMSISDNRepository
 var mockUserRepo *repository.MockUserRepository
+var mockVault *vault.MockVaultInterface
 var lookupService MSISDNService
 var authService AuthService
 
@@ -23,7 +25,8 @@ func setup(t *testing.T) func(){
 	mockMSISDNRepo = repository.NewMockMSISDNRepository(ctrl)
 	mockUserRepo = repository.NewMockUserRepository(ctrl)
 	lookupService = NewMSISDNService(mockMSISDNRepo)
-	authService = ReturnAuthService(mockUserRepo, nil)
+	mockVault = vault.NewMockVaultInterface(ctrl)
+	authService = ReturnAuthService(mockUserRepo, mockVault)
 
 	return func(){
 		lookupService = nil

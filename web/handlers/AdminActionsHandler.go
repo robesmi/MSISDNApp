@@ -20,7 +20,7 @@ type AdminActionsHandler struct {
 	AuthService service.AuthService
 	MSISDNService service.MSISDNService
 	Logger zerolog.Logger
-	Vault *vault.Vault
+	Vault vault.VaultInterface
 }
 
 func (adh AdminActionsHandler) GetAdminPanelPage(c *gin.Context){

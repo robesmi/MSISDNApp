@@ -13,10 +13,10 @@ import (
 
 type DefaultAuthService struct {
 	repository repository.UserRepository
-	Vault *vault.Vault
+	Vault vault.VaultInterface
 }
 
-func ReturnAuthService(repository repository.UserRepository, vault *vault.Vault) AuthService {
+func ReturnAuthService(repository repository.UserRepository, vault vault.VaultInterface) AuthService {
 	return DefaultAuthService{repository: repository, Vault: vault}
 }
 //go:generate mockgen -destination=../mocks/service/mockAuthService.go -package=service github.com/robesmi/MSISDNApp/service AuthService
@@ -46,6 +46,7 @@ type AuthService interface {
 var (
 	createAccessToken = utils.CreateAccessToken
 	createRefreshToken = utils.CreateRefreshToken
+	encryptEmailAes256 = utils.EncryptEmailAes256
 )
 
 
@@ -64,7 +65,7 @@ func (s DefaultAuthService) RegisterNativeUser(username string, password string,
 			return nil, fetchErr
 		}
 
-		encryptedEmail, encErr := utils.EncryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+		encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
 		if encErr != nil{
 			return nil, encErr
 		}
@@ -113,7 +114,7 @@ func (s DefaultAuthService) LoginNativeUser(username string, password string) (*
 		return nil, fetchErr
 	}
 
-	encryptedEmail, encErr := utils.EncryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
 	if encErr != nil{
 		return nil, encErr
 	}
@@ -160,7 +161,7 @@ func (s DefaultAuthService)RegisterImportedUser(username string) (*dto.LoginResp
 		return nil, fetchErr
 	}
 
-	encryptedEmail, encErr := utils.EncryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
 	if encErr != nil{
 		return nil, encErr
 	}
@@ -207,7 +208,7 @@ func (s DefaultAuthService)LoginImportedUser(username string) (*dto.LoginRespons
 		return nil, fetchErr
 	}
 
-	encryptedEmail, encErr := utils.EncryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
 	if encErr != nil{
 		return nil, encErr
 	}

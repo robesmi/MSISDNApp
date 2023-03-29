@@ -15,7 +15,7 @@ import (
 
 type AuthApiHandler struct {
 	Service service.AuthService
-	Vault *vault.Vault
+	Vault vault.VaultInterface
 }
 
 type RefreshRequest struct{

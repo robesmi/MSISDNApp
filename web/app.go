@@ -175,7 +175,7 @@ func Start(){
 }
 
 // getDbClient initializes the db connection and returns it to Start
-func getDbClient(vault *vault.Vault, logger *zerolog.Logger) *sqlx.DB{
+func getDbClient(vault vault.VaultInterface, logger *zerolog.Logger) *sqlx.DB{
 
 	dbCreds, fetchErr := vault.Fetch("appvars", "MYSQL_DRIVER", "MYSQL_SOURCE")
 	if fetchErr != nil {

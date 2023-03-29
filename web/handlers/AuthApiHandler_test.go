@@ -276,7 +276,7 @@ func TestRefreshAccessTokenCall(t *testing.T) {
 		AccessToken: "test1",
 		RefreshToken: "test2",
 	}
-	validateAccessToken = func(vault *vault.Vault,s string)(jwt.MapClaims, error){
+	validateAccessToken = func(vault vault.VaultInterface,s string)(jwt.MapClaims, error){
 		return jwt.MapClaims{
 			"id":"testid",
 		},nil
@@ -317,7 +317,7 @@ func TestLogOutCall(t *testing.T) {
 	jsonVal, _ := json.Marshal(jsonReq)
 
 	
-	validateRefreshToken = func(vault *vault.Vault,s string)(jwt.MapClaims, error){
+	validateRefreshToken = func(vault vault.VaultInterface,s string)(jwt.MapClaims, error){
 		return jwt.MapClaims{
 			"id":"testid",
 		},nil

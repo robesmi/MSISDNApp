@@ -12,7 +12,7 @@ import (
 	"github.com/robesmi/MSISDNApp/vault"
 )
 
-func ValidateTokenUserSection(vault *vault.Vault) gin.HandlerFunc{
+func ValidateTokenUserSection(vault vault.VaultInterface) gin.HandlerFunc{
 	return func(c *gin.Context){
 			//Get the token either from authorization header or cookie
 			var access_token string
@@ -84,7 +84,7 @@ func ValidateTokenUserSection(vault *vault.Vault) gin.HandlerFunc{
 	}
 }
 
-func ValidateTokenAdminSection(vault *vault.Vault) gin.HandlerFunc {
+func ValidateTokenAdminSection(vault vault.VaultInterface) gin.HandlerFunc {
 	return func(c *gin.Context){
 
 		//Get the token either from authorization header or cookie
@@ -154,7 +154,7 @@ func ValidateTokenAdminSection(vault *vault.Vault) gin.HandlerFunc {
 	}
 }
 
-func ValidateApiTokenUserSection(vault *vault.Vault) gin.HandlerFunc{
+func ValidateApiTokenUserSection(vault vault.VaultInterface) gin.HandlerFunc{
 	return func(c *gin.Context){
 		//Get the token from authorization header
 		var access_token string

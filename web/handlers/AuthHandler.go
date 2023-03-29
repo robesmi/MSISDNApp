@@ -26,10 +26,10 @@ import (
 type AuthHandler struct {
 	Service	service.AuthService
 	Logger	zerolog.Logger
-	Vault	*vault.Vault
+	Vault	vault.VaultInterface
 }
 
-func NewAuthHandler(service service.AuthService, logger zerolog.Logger, vault *vault.Vault) *AuthHandler{
+func NewAuthHandler(service service.AuthService, logger zerolog.Logger, vault vault.VaultInterface) *AuthHandler{
 	
 	data, err := vault.Fetch("appvars", "GithubClientId", "GithubClientSecret", "GithubRedirect", "GoogleClientId")
 	if err != nil{
