@@ -35,7 +35,7 @@ func EncryptEmailAes256(key []byte, message string) (string, error) {
 	return encodedResult, nil
 }
 
-// Decrypts a Aes256 email and returns the original string.... or an error?
+// Decrypts a base 64 encoded and Aes256 encrypted email and returns the original string.... or an error?
 func DecryptEmailAes256(key []byte, ciphertext string) (string, error){
 
 	decodedCiphertext, decErr := base64.RawStdEncoding.DecodeString(ciphertext)
