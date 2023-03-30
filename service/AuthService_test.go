@@ -432,9 +432,14 @@ func TestGetUserByIdValid(t *testing.T){
 		Password: "pw1",
 		Role: "user",
 	}
+	decryptEmailAes256 = func(key []byte, ciphertext string) (string, error) {
+		return ciphertext, nil
+	}
+	test := map[string]string{"":""}
 
+	
 	mockUserRepo.EXPECT().GetUserById(user.UUID).Return(&user,nil)
-
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 	//Act
 
 	result, err := authService.GetUserById(user.UUID)
@@ -481,9 +486,13 @@ func TestEditUserByIdAndPassword(t *testing.T){
 		Password: "pw1",
 		Role: "user",
 	}
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return message, nil
+	}
+	test := map[string]string{"":""}
 
 	mockUserRepo.EXPECT().EditUserById(user.UUID, user.Username, gomock.Any() ,user.Role).Return(nil)
-
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 	//Act
 
 	err := authService.EditUserById(user.UUID, user.Username, user.Password, user.Role)
@@ -508,8 +517,13 @@ func TestEditUserByIdNoPassword(t *testing.T){
 		Password: "pw1",
 		Role: "user",
 	}
+	encryptEmailAes256 = func(key []byte, message string) (string, error) {
+		return message, nil
+	}
+	test := map[string]string{"":""}
 
 	mockUserRepo.EXPECT().EditUserById(user.UUID, user.Username, "",user.Role).Return(nil)
+	mockVault.EXPECT().Fetch(gomock.Any(), gomock.Any()).Return(test, nil)
 
 	//Act
 

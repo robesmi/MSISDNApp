@@ -31,7 +31,6 @@ services:
     env_file:
       - ./config/app_secrets.env
     volumes:
-      - ./vault-root-token:/vault/file/vault-root-token
       - ./docker/vault-server/vault-init.sh:/usr/local/bin/vault-init.sh
       - vault-data:/vault/file/
     command: /usr/local/bin/vault-init.sh

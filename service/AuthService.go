@@ -47,6 +47,7 @@ var (
 	createAccessToken = utils.CreateAccessToken
 	createRefreshToken = utils.CreateRefreshToken
 	encryptEmailAes256 = utils.EncryptEmailAes256
+	decryptEmailAes256 = utils.DecryptEmailAes256
 )
 
 
@@ -299,6 +300,18 @@ func (s DefaultAuthService) GetUserById(id string) (*model.User, error){
 	if err != nil {
 		return nil, err
 	}
+
+	encryptKey, fetchErr := s.Vault.Fetch("appvars","EncryptKey")
+	if fetchErr != nil{
+		return nil, fetchErr
+	}
+
+	decryptedUsername, encErr := decryptEmailAes256([]byte(encryptKey["EncryptKey"]), user.Username)
+	if encErr != nil{
+		return nil, encErr
+	}
+	user.Username = decryptedUsername
+
 	return user, nil
 
 }
@@ -316,7 +329,18 @@ func (s DefaultAuthService) EditUserById(id string, username string, password st
 	if genErr != nil{
 		return errs.NewUnexpectedError(genErr.Error())
 	}
-	updateErr := s.repository.EditUserById(id,username, string(encodedPassword), role)
+
+	encryptKey, fetchErr := s.Vault.Fetch("appvars","EncryptKey")
+	if fetchErr != nil{
+		return fetchErr
+	}
+
+	encryptedEmail, encErr := encryptEmailAes256([]byte(encryptKey["EncryptKey"]), username)
+	if encErr != nil{
+		return encErr
+	}
+
+	updateErr := s.repository.EditUserById(id, encryptedEmail, string(encodedPassword), role)
 	if updateErr != nil {
 		return updateErr
 	}

@@ -96,7 +96,7 @@ func (adh AdminActionsHandler) EditUserPage(c *gin.Context){
 		})
 		return
 	}
-
+	
 	c.HTML(http.StatusOK, "edituser.html", gin.H{
 		"user" : user,
 	})
