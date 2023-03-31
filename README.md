@@ -18,6 +18,8 @@ Uses a Hashicorp Vault for storing and fetching the application secrets.
 
 Has a administrator page for viewing and managing the database.
 
+The app functionality does not account for mobile number portability, and uses a small initialized test set of values in the database as a proof of concept.
+
 # ⚙️Usage
 
 Populate the .env files in ```config/``` with your parameters.  
